@@ -29,7 +29,7 @@ public class Main : IActPluginV1 {
 	private DumpAssets da;
 	private bool inited;
 
-	void Init() {
+	private void Init() {
 		foreach (var item in ActGlobals.oFormActMain.ActPlugins.Where(
 					item => item.pluginFile.Name.ToUpper().Contains("POSTNAMAZU"))) {
 			var postnamazu = item.pluginObj as PostNamazu.PostNamazu;
@@ -68,6 +68,7 @@ public class Main : IActPluginV1 {
 			};
 			AddButton("打开输出目录", (_, _) => {
 				if (!inited) Init();
+				if (!Directory.Exists(ROOTDIR)) Directory.CreateDirectory(ROOTDIR);
 				Process.Start(ROOTDIR);
 			});
 			AddButton("角色状态", (_, _) => {

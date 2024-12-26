@@ -11,7 +11,7 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记等导出工具
 ## 使用方法
 
 将Definitions文件夹放在ACT根目录(以下简称\$(ActRoot))。LatihasExport.dll可随意放置，推荐路径$(ActRoot)
-\Plugins\LatihasExport\LatihasExport.dll。
+\Plugins\LatihasExport\LatihasExport.dll。会在LatihasExport.dll相同目录下生成out输出文件夹。
 
 ## 二次开发方法
 
