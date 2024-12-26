@@ -39,7 +39,7 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记(做赐福)等导
 
 ## 二次开发方法
 
-最好是能联系开发者群(556836295)，有时候懒b了但是游戏更新了导致失效可以更新Definitions文件夹内信息(比如即将到来的7.1需要改Recipe.json等)，要大改请修改.csproj中的ActRoot等信息。SaintCoinach设置的是国服。
+不会就提交Issue，有时候懒b了但是游戏更新了导致失效可以更新Definitions文件夹内信息(比如即将到来的7.1需要改Recipe.json等)，要大改请修改.csproj中的ActRoot等信息。SaintCoinach设置的是国服。
 
 ## 参考文献
 
