@@ -1,0 +1,36 @@
+{
+  "sheet": "DawnGrowMember",
+  "defaultColumn": "Member",
+  "definitions": [
+    {
+      "index": 0,
+      "type": "repeat",
+      "count": 4,
+      "definition": {
+        "name": "SelectImage",
+        "converter": {
+          "type": "icon"
+        }
+      }
+    },
+    {
+      "index": 4,
+      "type": "repeat",
+      "count": 4,
+      "definition": {
+        "name": "PortraitImage",
+        "converter": {
+          "type": "icon"
+        }
+      }
+    },
+    {
+      "index": 8,
+      "name": "Class",
+      "converter": {
+        "type": "link",
+        "target": "DawnMemberUIParam"
+      }
+    }
+  ]
+}

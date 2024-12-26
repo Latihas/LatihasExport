@@ -1,0 +1,9 @@
+{
+  "sheet": "CSBonusTextData",
+  "defaultColumn": "Text",
+  "definitions": [
+    {
+      "name": "Text"
+    }
+  ]
+}

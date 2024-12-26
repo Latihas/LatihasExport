@@ -1,0 +1,11 @@
+{
+  "sheet": "EventIconPriorityPair",
+  "definitions": [
+    {
+      "name": "Icon",
+      "converter": {
+        "type": "icon"
+      }
+    }
+  ]
+}

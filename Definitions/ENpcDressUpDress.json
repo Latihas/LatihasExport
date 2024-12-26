@@ -1,0 +1,161 @@
+{
+  "sheet": "ENpcDressUpDress",
+  "definitions": [
+    {
+      "index": 7,
+      "name": "ENpc",
+      "converter": {
+        "type": "link",
+        "target": "ENpcResident"
+      }
+    },
+    {
+      "index": 9,
+      "name": "Behavior",
+      "converter": {
+        "type": "link",
+        "target": "Behavior"
+      }
+    },
+    {
+      "index": 37,
+      "name": "Model{MainHand}"
+    },
+    {
+      "index": 38,
+      "name": "Dye{MainHand}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 39,
+      "name": "Dye2{MainHand}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 40,
+      "name": "Model{OffHand}"
+    },
+    {
+      "index": 41,
+      "name": "Dye{OffHand}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 42,
+      "name": "Dye2{OffHand}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 43,
+      "name": "Model{Head}"
+    },
+    {
+      "index": 44,
+      "name": "Dye{Head}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 45,
+      "name": "Dye2{Head}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 46,
+      "name": "Model{Body}"
+    },
+    {
+      "index": 47,
+      "name": "Dye{Body}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 48,
+      "name": "Dye2{Body}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 49,
+      "name": "Model{Hands}"
+    },
+    {
+      "index": 50,
+      "name": "Dye{Hands}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 51,
+      "name": "Dye2{Hands}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 52,
+      "name": "Model{Legs}"
+    },
+    {
+      "index": 53,
+      "name": "Dye{Legs}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 54,
+      "name": "Dye2{Legs}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 55,
+      "name": "Model{Feet}"
+    },
+    {
+      "index": 56,
+      "name": "Dye{Feet}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    },
+    {
+      "index": 57,
+      "name": "Dye2{Feet}",
+      "converter": {
+        "type": "link",
+        "target": "Stain"
+      }
+    }
+  ]
+}

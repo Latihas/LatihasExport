@@ -1,0 +1,13 @@
+{
+  "sheet": "LogMessage",
+  "defaultColumn": "Text",
+  "definitions": [
+    {
+      "name": "LogKind"
+    },
+    {
+      "index": 5,
+      "name": "Text"
+    }
+  ]
+}

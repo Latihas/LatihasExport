@@ -1,0 +1,53 @@
+{
+  "sheet": "GuidePage",
+  "definitions": [
+    {
+      "index": 0,
+      "name": "Key"
+    },
+    {
+      "index": 2,
+      "name": "Output",
+      "converter": {
+        "type": "complexlink",
+        "links": [
+          {
+            "when": {
+              "key": "Key",
+              "value": 1
+            },
+            "sheet": "GuidePageString"
+          },
+          {
+            "when": {
+              "key": "Key",
+              "value": 2
+            },
+            "sheet": "GuidePageString"
+          },
+          {
+            "when": {
+              "key": "Key",
+              "value": 4
+            },
+            "sheet": "GuidePageString"
+          },
+          {
+            "when": {
+              "key": "Key",
+              "value": 5
+            },
+            "sheet": "GuidePageString"
+          },
+          {
+            "when": {
+              "key": "Key",
+              "value": 6
+            },
+            "sheet": "GuidePageString"
+          }
+        ]
+      }
+    }
+  ]
+}

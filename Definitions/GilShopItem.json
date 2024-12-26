@@ -1,0 +1,41 @@
+{
+  "sheet": "GilShopItem",
+  "defaultColumn": "Item",
+  "definitions": [
+    {
+      "name": "Item",
+      "converter": {
+        "type": "link",
+        "target": "Item"
+      }
+    },
+    {
+      "index": 4,
+      "type": "repeat",
+      "count": 2,
+      "definition": {
+        "name": "Quest{Required}",
+        "converter": {
+          "type": "link",
+          "target": "Quest"
+        }
+      }
+    },
+    {
+      "index": 6,
+      "name": "Achievement{Required}",
+      "converter": {
+        "type": "link",
+        "target": "Achievement"
+      }
+    },
+    {
+      "index": 8,
+      "name": "State{Required}"
+    },
+    {
+      "index": 9,
+      "name": "Patch"
+    }
+  ]
+}

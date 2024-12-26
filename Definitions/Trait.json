@@ -1,0 +1,48 @@
+{
+  "sheet": "Trait",
+  "defaultColumn": "Name",
+  "definitions": [
+    {
+      "name": "Name"
+    },
+    {
+      "index": 1,
+      "name": "Icon",
+      "converter": {
+        "type": "icon"
+      }
+    },
+    {
+      "index": 2,
+      "name": "ClassJob",
+      "converter": {
+        "type": "link",
+        "target": "ClassJob"
+      }
+    },
+    {
+      "index": 4,
+      "name": "Level"
+    },
+    {
+      "index": 5,
+      "name": "Quest",
+      "converter": {
+        "type": "link",
+        "target": "Quest"
+      }
+    },
+    {
+      "index": 6,
+      "name": "Value"
+    },
+    {
+      "index": 7,
+      "name": "ClassJobCategory",
+      "converter": {
+        "type": "link",
+        "target": "ClassJobCategory"
+      }
+    }
+  ]
+}

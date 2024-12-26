@@ -1,0 +1,22 @@
+{
+  "sheet": "JobHudManual",
+  "defaultColumn": "Action",
+  "definitions": [
+    {
+      "index": 3,
+      "name": "Action",
+      "converter": {
+        "type": "link",
+        "target": "Action"
+      }
+    },
+    {
+      "index": 6,
+      "name": "Guide",
+      "converter": {
+        "type": "link",
+        "target": "Guide"
+      }
+    }
+  ]
+}

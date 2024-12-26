@@ -1,0 +1,16 @@
+{
+  "sheet": "MirageStoreSetItemLookup",
+  "definitions": [
+    {
+      "type": "repeat",
+      "count": 2,
+      "definition": {
+        "name": "MirageStoreSetItem",
+        "converter": {
+          "type": "link",
+          "target": "MirageStoreSetItem"
+        }
+      }
+    }
+  ]
+}
