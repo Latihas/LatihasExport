@@ -33,7 +33,7 @@ public class DumpAssets {
 	}
 
 	internal List<BAchievement> GetValidAchievement() {
-		return realm.GameData.GetSheet<Achievement>().Select(i =>
+		return realm.GameData.GetSheet<Achievement>().Where(i => i.Points != 0).Select(i =>
 			new BAchievement(i.Key, i.Points, i.Name, i.AchievementCategory.ToString(), i.Description)).ToList();
 	}
 
