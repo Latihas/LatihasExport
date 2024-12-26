@@ -22,4 +22,5 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记等导出工具
 
 - https://github.com/aers/FFXIVClientStructs
 - https://github.com/Ariiisu/ExportFishLog
-- https://github.com/xivapi/SaintCoinach
+- https://github.com/xivapi/SaintCoinach (最后一个.Net4版本)
+- GreyMagic.dll是从 https://github.com/Natsukage/PostNamazu 中自动拾取的
