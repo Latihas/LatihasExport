@@ -81,6 +81,7 @@
 		<Delete Files="$(OutputPath)/Newtonsoft.Json.dll"/>
 		<Delete Files="$(OutputPath)/System.Numerics.Vectors.dll"/>
 		<Delete Files="$(OutputPath)/System.Buffers.dll"/>
+		<Delete Files="$(OutputPath)/System.Drawing.Common.pdb"/>
 	</Target>
 	<Target Name="CopyResources" AfterTargets="RemoveFiles">
 		<ItemGroup>

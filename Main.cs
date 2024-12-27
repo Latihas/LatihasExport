@@ -78,36 +78,36 @@ public class Main : IActPluginV1 {
 				ClearLog();
 				Log(psa);
 			});
-			AddButton("导出小玩意(坐骑、时尚配饰等)", (_, _) => {
-				if (!inited) Init();
-				ClearLog();
-				var mountarr = new BitArray(psa._unlockedMountsBitmask.ToArray());
-				var ornamentarr = new BitArray(psa._unlockedOrnamentsBitmask.ToArray());
-				Log(mountarr.Length);
-				Log(ornamentarr.Length);
-				var sb_all = new StringBuilder();
-				var sb_rest = new StringBuilder();
-				foreach (var s in da!.GetValidSpecial()) {
-					try {
-						if (s.Category == Mount) {
-							s.Completed = mountarr[s.Id];
-							if (!s.Completed) sb_rest.Append(s);
-						}
-						else if (s.Category == DumpAssets.SpecialType.Ornament) {
-							s.Completed = ornamentarr[s.Id];
-							if (!s.Completed) sb_rest.Append(s);
-						}
-						sb_all.Append(s);
-					}
-					catch (Exception e) {
-						Log(e.ToString());
-						Log(s);
-					}
-				}
-				WriteFile("special_all.csv", sb_all);
-				WriteFile("special_rest.csv", sb_rest);
-				Log($"导出成功。");
-			});
+			// AddButton("导出小玩意(坐骑、时尚配饰等)", (_, _) => {
+			// 	if (!inited) Init();
+			// 	ClearLog();
+			// 	var mountarr = new BitArray(psa._unlockedMountsBitmask.ToArray());
+			// 	var ornamentarr = new BitArray(psa._unlockedOrnamentsBitmask.ToArray());
+			// 	Log(mountarr.Length);
+			// 	Log(ornamentarr.Length);
+			// 	var sb_all = new StringBuilder();
+			// 	var sb_rest = new StringBuilder();
+			// 	foreach (var s in da!.GetValidSpecial()) {
+			// 		try {
+			// 			if (s.Category == Mount) {
+			// 				s.Completed = mountarr[s.Id];
+			// 				if (!s.Completed) sb_rest.Append(s);
+			// 			}
+			// 			else if (s.Category == DumpAssets.SpecialType.Ornament) {
+			// 				s.Completed = ornamentarr[s.Id];
+			// 				if (!s.Completed) sb_rest.Append(s);
+			// 			}
+			// 			sb_all.Append(s);
+			// 		}
+			// 		catch (Exception e) {
+			// 			Log(e.ToString());
+			// 			Log(s);
+			// 		}
+			// 	}
+			// 	WriteFile("special_all.csv", sb_all);
+			// 	WriteFile("special_rest.csv", sb_rest);
+			// 	Log($"导出成功。");
+			// });
 			AddButton("导出制作笔记", (b, _) => {
 				if (!inited) Init();
 				if (MessageBox.Show("这(或许)将耗费巨量时间", "开始确认", MessageBoxButtons.OKCancel) != DialogResult.OK) return;
