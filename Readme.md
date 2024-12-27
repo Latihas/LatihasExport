@@ -23,18 +23,23 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记(做赐福工具�
 ### 钓鱼
 
 `fish_all.csv`: 所有鱼信息
+
 `fish_done.json`: 可以导入到鱼糕的信息
+
 `fish_rest.csv`: 没抓到的鱼的信息
 
 ### 制作笔记
 
 `recipe_rest.csv`: 剩余未完成配方信息
+
 `recipe_rest_material.csv`: 完成所有剩余未完成配方所需的材料计算总和
 
 ### 成就
 
 有的成就在游戏里似乎找不到
+
 `achievement_all.csv`: 所有成就信息
+
 `achievement_rest.csv`: 未完成成就信息
 
 ## 二次开发方法
