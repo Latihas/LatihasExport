@@ -74,5 +74,5 @@ SaintCoinach拉下来仅保留该项目与DotSquish。删除SaintCoinach.csproj�
 
 - https://github.com/aers/FFXIVClientStructs (目前国服版本7.05,有可能需要找前几个Commit)
 - https://github.com/Ariiisu/ExportFishLog
-- Definitions文件夹从 https://github.com/xivapi/SaintCoinach (最后一个.Net4版本)拾取，该文件夹与.Net版本无关，国服不能用找最新版之前的几个Commit即可
+- Definitions文件夹从 https://github.com/xivapi/SaintCoinach (241125)拾取，该文件夹与SaintCoinach版本无关，国服不能用找最新版之前的几个Commit即可
 - GreyMagic.dll是从 https://github.com/Natsukage/PostNamazu 拾取
