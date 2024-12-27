@@ -12,7 +12,7 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记(做赐福工具�
 
 ### 配置
 
-将`EntityFramework`放入ACT的DLL加载目录(如`$(ActRoot)/DLibs/`)，这个dll由于神奇的原因打包不进去。
+将`EntityFramework.dll`放入ACT的DLL加载目录(如`$(ActRoot)/DLibs/EntityFramework.dll`)，这个dll由于神奇的原因打包不进去。
 
 将`Definitions`文件夹与`LatihasExport.dll`放在一起，推荐路径`$(ActRoot)/Plugins/LatihasExport/`。会在`LatihasExport.dll`相同目录下生成out输出文件夹。
 
