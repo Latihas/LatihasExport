@@ -39,14 +39,14 @@ public class Main : IActPluginV1 {
 				Log("鲇鱼精初始化错误，请检查游戏状态");
 				return;
 			}
+			ROOTDIR = ActGlobals.oFormActMain.PluginGetSelfData(this).pluginFile.DirectoryName;
+			OUTDIR =  ROOTDIR + "/out/";
 			da = new DumpAssets((Process)typeof(PostNamazu.PostNamazu).GetField("FFXIV", NonPublic | Instance)!.GetValue(postnamazu));
 			var memory = postnamazu!.Memory;
 			Log("Init Address");
 			psa = new Address.PlayerStateAddress(postnamazu.SigScanner, memory);
 			aa = new Address.AchievementAddress(postnamazu.SigScanner, memory);
 			rna = new Address.RecipeNoteAddress(postnamazu.SigScanner, memory);
-			ROOTDIR = ActGlobals.oFormActMain.PluginGetSelfData(this).pluginFile.DirectoryName;
-			OUTDIR =  ROOTDIR + "/out/";
 			inited = true;
 		}
 	}
