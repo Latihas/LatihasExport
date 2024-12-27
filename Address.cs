@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -13,29 +14,15 @@ public static class Address {
 	private struct AddrPattern {
 		internal const string PlayerStateBaseAddress = "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 84 C0 75 06 F6 43 18 02",
 			AchievementBaseAddress = "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 04 30 FF C3",
-			RecipeNoteBaseAddress = "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 41 39 86 ?? ?? ?? ??",
-			InventoryManagerBaseAddress = "48 8D 0D ?? ?? ?? ?? 81 C2";
+			RecipeNoteBaseAddress = "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 41 39 86 ?? ?? ?? ??";
 	}
 
 	internal abstract class BaseAddress {
-		protected readonly IntPtr base_addr;
+		private readonly IntPtr base_addr;
 		private readonly ExternalProcessMemory memory;
 		private readonly int rel_offset;
 		internal Dictionary<string, string> outStrDic = new();
 		internal readonly SigScanner scanner;
-
-		internal T EasyExecFunc<T>(string pattern, params object[] args) where T : struct {
-			var p = scanner.ScanText(pattern);
-			var assemblyLock = memory.Executor.AssemblyLock;
-			var flag = false;
-			try {
-				Monitor.Enter(assemblyLock, ref flag);
-				return memory.CallInjected64<T>(p, args);
-			}
-			finally {
-				if (flag) Monitor.Exit(assemblyLock);
-			}
-		}
 
 		internal T EasyExecFunc<T>(IntPtr p, params object[] args) where T : struct {
 			var assemblyLock = memory.Executor.AssemblyLock;
@@ -58,7 +45,7 @@ public static class Address {
 
 		protected abstract void UpdateAll();
 
-		// ReSharper disable once UnusedMember.Local
+		// ReSharper disable once UnusedMember.Global
 		internal IntPtr LegacyScan(string s, int bias = 4) {
 			var x = scanner.ScanText(s);
 			return x + rel_offset + bias + memory.Read<int>(x + rel_offset);
@@ -91,7 +78,7 @@ public static class Address {
 				: toString(getArray<T>(bias, length));
 		}
 
-		// ReSharper disable once UnusedMember.Local
+		// ReSharper disable once UnusedMember.Global
 		internal string EasyStr<T>(int bias, int length, int begin) where T : struct {
 			return toString(getArray<T>(bias, length, begin));
 		}
@@ -117,7 +104,7 @@ public static class Address {
 		private void Update() {
 			_caughtFishBitmask = getArray<byte>(0x3EA, 180); //0x3EC
 			_caughtSpearfishBitmask = getArray<byte>(0x4B0, 39); //0x4B1
-			_unlockedMountsBitmask = getArray<byte>(0x2DD, 45); 
+			_unlockedMountsBitmask = getArray<byte>(0x2DD, 45);
 			_unlockedOrnamentsBitmask = getArray<byte>(0x303, 7);
 			_unlockedGlassesStylesBitmask = getArray<byte>(0x30A, 2); //4
 		}
@@ -125,16 +112,56 @@ public static class Address {
 		private static readonly string[] ClassJobs = {
 			"冒险", "剑术", "格斗", "斧术", "枪术", "弓术", "幻术", "咒术",
 			"刻木", "锻铁", "铸甲", "雕金", "制革", "裁衣", "炼金", "烹调", "采矿", "园艺", "捕鱼",
-			"骑士", "武僧", "战士", "龙骑", "诗人", "白魔", "黑魔", "秘术", "召唤", "学者", "双剑", "忍者",
-			"机工", "黑骑", "占星", "武士", "赤魔", "青魔", "绝枪", "舞者", "钐镰", "贤者", "蝰蛇", "绘灵"
+			"骑士", "武僧", "战士", "龙骑", "诗人", "白魔", "黑魔",
+			"秘术", "召唤", "学者",
+			"双剑", "忍者",
+			"机工", "黑骑", "占星",
+			"武士", "赤魔", "青魔",
+			"绝枪", "舞者",
+			"钐镰", "贤者",
+			"蝰蛇", "绘灵"
 		};
 		private static readonly Dictionary<string, int> ClassJobLevelMap = new() {
+			["格斗"] = 0,
+			["武僧"] = 0,
 			["剑术"] = 1,
 			["骑士"] = 1,
+			["斧术"] = 2,
+			["战士"] = 2,
+			["弓术"] = 3,
+			["诗人"] = 3,
 			["枪术"] = 4,
 			["龙骑"] = 4,
+			["咒术"] = 5,
+			["黑魔"] = 5,
+			["幻术"] = 6,
+			["白魔"] = 6,
+			["刻木"] = 7,
+			["锻铁"] = 8,
+			["铸甲"] = 9,
+			["雕金"] = 10,
+			["制革"] = 11,
+			["裁衣"] = 12,
+			["炼金"] = 13,
+			["烹调"] = 14,
+			["采矿"] = 15,
+			["园艺"] = 16,
+			["捕鱼"] = 17,
+			["秘术"] = 18,
+			["召唤"] = 18, 
+			["学者"] = 18,
+			["双剑"] = 19,
+			["忍者"] = 19,
+			["机工"] = 20,
+			["黑骑"] = 21,
+			["占星"] = 22,
+			["武士"] = 23,
 			["赤魔"] = 24,
 			["青魔"] = 25,
+			["绝枪"] = 26,
+			["舞者"] = 27,
+			["钐镰"] = 28,
+			["贤者"] = 29,
 			["蝰蛇"] = 30,
 			["绘灵"] = 31,
 		};
@@ -183,7 +210,7 @@ public static class Address {
 				["FreeAetheryteId"] = EasyStr<ushort>(0x2C0),
 				["FreeAetherytePlayStationPlus"] = EasyStr<ushort>(0x2C2),
 				["BaseRestedExperience"] = EasyStr<uint>(0x2C4),
-				["_unlockedMountsBitmask"] =toString(_unlockedMountsBitmask) ,
+				["_unlockedMountsBitmask"] = toString(_unlockedMountsBitmask),
 				["_unlockedOrnamentsBitmask"] = toString(_unlockedOrnamentsBitmask),
 				["_unlockedGlassesStylesBitmask"] = toString(_unlockedGlassesStylesBitmask), //4
 				["NumOwnedMounts"] = EasyStr<ushort>(0x30C), //0x30E
@@ -202,7 +229,7 @@ public static class Address {
 				["IsWarriorOfLight"] = ((QuestSpecialFlags & 2) != 0).ToString(),
 				["======已计算======"] = "======已计算======",
 				// ["JobId"] = EasyStr<byte>(0x7E),
-				["生日"] = $"{(BirthMonth + 12 + 7) % 12 + 1}月{BirthDay}日(?",
+				// ["生日"] = $"{(BirthMonth + 12 + 7) % 12 + 1}月{BirthDay}日(?",
 			};
 			for (var i = 0; i < ClassJobs.Length; i++) {
 				var detail = new StringBuilder();
@@ -228,8 +255,7 @@ public static class Address {
 			var p = scanner.ScanText("40 53 48 83 EC 20 8B D9 81 F9");
 			Dictionary<uint, bool> res = new();
 			var iter = 0;
-			foreach (var recipeId in recipeIds) {
-				if (!Main.Alive[0]) break;
+			foreach (var recipeId in recipeIds.TakeWhile(_ => Main.Alive[0])) {
 				if (iter++ % 250 == 0) Main.Log($"Processing:[{iter}/{recipeIds.Count}]");
 				res[recipeId] = EasyExecFunc<bool>(p, recipeId);
 			}

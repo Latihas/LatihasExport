@@ -42,6 +42,7 @@ public class DumpAssets {
 		Ornament
 	}
 
+	// ReSharper disable once UnusedMember.Global
 	internal List<BSpecial> GetValidSpecial() {
 		var res = realm.GameData.GetSheet<Mount>().Where(i => i.ToString() != "").Select(i => new BSpecial(SpecialType.Mount, i.Key, i.ToString())).ToList();
 		res.AddRange(realm.GameData.GetSheet<Ornament>().Where(i => i.ToString() != "").Select(i => new BSpecial(SpecialType.Ornament, i.Key, i.ToString())));

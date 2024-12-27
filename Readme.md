@@ -54,7 +54,7 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记(做赐福工具�
 
 ### 修改SaintCoinach
 
-SaintCoinach拉下来仅保留该项目与DotSquish。删除SaintCoinach.csproj、DotSquish.csproj、Definitions文件夹、Libra文件夹下非.cs文件
+SaintCoinach拉下来仅保留该项目与DotSquish。删除SaintCoinach.csproj及目录下非.cs文件、DotSquish.csproj、Definitions文件夹、Libra文件夹下非.cs文件
 
 添加
 

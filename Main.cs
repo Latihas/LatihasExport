@@ -13,8 +13,6 @@ using Newtonsoft.Json;
 using static System.Reflection.BindingFlags;
 using static LatihasExport.Beans;
 using static LatihasExport.Beans.BFishType;
-using static LatihasExport.DumpAssets.SpecialType;
-using Ornament = SaintCoinach.Xiv.Ornament;
 
 namespace LatihasExport;
 
