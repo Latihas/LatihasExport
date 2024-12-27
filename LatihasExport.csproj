@@ -1,92 +1,62 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<ActRoot>D:\Program\ACT.DieMoe</ActRoot>
+		<OutputPath>$(ActRoot)\Plugins\LatihasExport</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	</PropertyGroup>
 	<PropertyGroup>
-		<ProjectGuid>{27CE6946-ABBA-4050-9B62-736BD357E8C9}</ProjectGuid>
 		<OutputType>Library</OutputType>
-		<AppDesignerFolder>Properties</AppDesignerFolder>
-		<RootNamespace>LatihasExport</RootNamespace>
-		<AssemblyName>LatihasExport</AssemblyName>
-		<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-		<FileAlignment>512</FileAlignment>
+		<TargetFramework>net48</TargetFramework>
 		<LangVersion>10</LangVersion>
-		<OutputPath>$(ActRoot)\Plugins\LatihasExport</OutputPath>
-		<PublishSingleFile>true</PublishSingleFile>
-		<Optimize>true</Optimize>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<AllowedReferenceRelatedFileExtensions>.dll</AllowedReferenceRelatedFileExtensions>
+		<PlatformTarget>x64</PlatformTarget>
+		<Optimize>true</Optimize>
+		<DebugSymbols>false</DebugSymbols>
+		<DebugType>none</DebugType>
 	</PropertyGroup>
-
-	<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-
 	<ItemGroup>
 		<Reference Include="Advanced Combat Tracker">
-			<HintPath>$(ActRoot)\DLibs\Advanced Combat Tracker.dll</HintPath>
+			<HintPath>$(ActRoot)/DLibs/Advanced Combat Tracker.dll</HintPath>
+		</Reference>
+		<Reference Include="PostNamazu">
+			<HintPath>$(ActRoot)/Plugins/PostNamazu.dll</HintPath>
 		</Reference>
 		<Reference Include="GreyMagic">
 			<HintPath>GreyMagic.dll</HintPath>
 		</Reference>
-		<Reference Include="PostNamazu">
-			<HintPath>$(ActRoot)\Plugins\PostNamazu.dll</HintPath>
-		</Reference>
 		<Reference Include="System"/>
 		<Reference Include="System.Core"/>
+		<Reference Include="System.Data.Entity" />
 		<Reference Include="System.Drawing"/>
 		<Reference Include="System.Memory"/>
 		<Reference Include="System.Numerics"/>
 		<Reference Include="System.Windows.Forms"/>
 	</ItemGroup>
 	<ItemGroup>
-		<Compile Include="Address.cs"/>
-		<Compile Include="Beans.cs"/>
-		<Compile Include="DumpAssets.cs"/>
-		<Compile Include="Main.cs"/>
-		<Compile Include="Utils.cs"/>
-		<Compile Include="Properties\AssemblyInfo.cs"/>
-		<Compile Include="SaintCoinach\**"/>
-		<Compile Include="DotSquish\**"/>
-	</ItemGroup>
-	<ItemGroup>
-		<Content Include="libs/GreyMagic.dll"/>
+		<Content Include="libs/*"/>
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="FodyWeavers.xml"/>
-		<PackageReference Include="Costura.Fody" Version="6.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Fody" Version="6.5.5">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-	<ItemGroup>
+		<PackageReference Include="Costura.Fody" Version="6.0.0" PrivateAssets="All"/>
+		<PackageReference Include="Fody" Version="6.9.1" PrivateAssets="All"/>
+		<PackageReference Include="EntityFramework" Version="6.5.1"/>
 		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0"/>
 		<PackageReference Include="DotNetZip" Version="1.16.0"/>
-		<PackageReference Include="EntityFramework" Version="6.5.1"/>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
 		<PackageReference Include="System.Drawing.Common" Version="9.0.0"/>
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.0"/>
 	</ItemGroup>
-	<Target Name="RemoveFiles" AfterTargets="Build">
-		<Delete Files="$(OutputPath)/Advanced Combat Tracker.dll"/>
-		<Delete Files="$(OutputPath)/DotNetZip.pdb"/>
-		<Delete Files="$(OutputPath)/PostNamazu.dll"/>
-		<Delete Files="$(OutputPath)/GreyMagic.dll"/>
-		<Delete Files="$(OutputPath)/System.Memory.dll"/>
-		<Delete Files="$(OutputPath)/System.Numerics.dll"/>
-		<Delete Files="$(OutputPath)/Newtonsoft.Json.dll"/>
-		<Delete Files="$(OutputPath)/System.Numerics.Vectors.dll"/>
-		<Delete Files="$(OutputPath)/System.Buffers.dll"/>
-		<Delete Files="$(OutputPath)/System.Drawing.Common.pdb"/>
-	</Target>
-	<Target Name="CopyResources" AfterTargets="RemoveFiles">
-		<ItemGroup>
-			<ResourceFiles Include="Definitions\**"/>
-		</ItemGroup>
-		<Copy SourceFiles="@(ResourceFiles)" DestinationFolder="$(OutDir)../../Definitions/%(RecursiveDir)"/>
-	</Target>
+		<Target Name="DeleteFiles" AfterTargets="Build">
+			<ItemGroup>
+				<FilesToDelete Include="$(OutputPath)/*.dll" Exclude="$(OutputPath)/LatihasExport.dll;$(OutputPath)/EntityFramework.dll"/>
+			</ItemGroup>
+			<Delete Files="@(FilesToDelete)"/>
+		</Target>
+	<ItemGroup>
+		<None Include="Definitions\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>
