@@ -37,6 +37,17 @@ public class DumpAssets {
 			new BAchievement(i.Key, i.Points, i.Name, i.AchievementCategory.ToString(), i.Description)).ToList();
 	}
 
+	internal enum SpecialType {
+		Mount,
+		Ornament
+	}
+
+	internal List<BSpecial> GetValidSpecial() {
+		var res = realm.GameData.GetSheet<Mount>().Where(i => i.ToString() != "").Select(i => new BSpecial(SpecialType.Mount, i.Key, i.ToString())).ToList();
+		res.AddRange(realm.GameData.GetSheet<Ornament>().Where(i => i.ToString() != "").Select(i => new BSpecial(SpecialType.Ornament, i.Key, i.ToString())));
+		return res;
+	}
+
 	internal List<Recipe> GetValidRecipe() {
 		return realm.GameData.GetSheet<Recipe>().Where(i =>
 			i.RecipeLevelTable.Stars == 0

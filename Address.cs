@@ -105,23 +105,9 @@ public static class Address {
 		}
 	}
 
-	internal class InventoryManagerAddress : BaseAddress {
-
-		internal InventoryManagerAddress(SigScanner scanner, ExternalProcessMemory memory)
-			: base(AddrPattern.InventoryManagerBaseAddress, scanner, memory) {
-	
-		}
-
-		protected override void UpdateAll() {
-			outStrDic = new Dictionary<string, string> {
-				["WolfMarks"] =EasyExecFunc<uint>("E9 ?? ?? ?? ?? 8B CB E8 ?? ?? ?? ?? 84 C0 74 16").ToString() ,
-				// ["RetainerGil"] = EasyStr<uint>(0xB8 + 0x428, 8)
-			};
-		}
-	}
 
 	internal class PlayerStateAddress : BaseAddress {
-		internal List<byte> _caughtFishBitmask, _caughtSpearfishBitmask;
+		internal List<byte> _caughtFishBitmask, _caughtSpearfishBitmask, _unlockedMountsBitmask, _unlockedOrnamentsBitmask, _unlockedGlassesStylesBitmask;
 
 		internal PlayerStateAddress(SigScanner scanner, ExternalProcessMemory memory)
 			: base(AddrPattern.PlayerStateBaseAddress, scanner, memory) {
@@ -129,14 +115,39 @@ public static class Address {
 		}
 
 		private void Update() {
-			_caughtFishBitmask = getArray<byte>(0x3EC - 2, 180);
-			_caughtSpearfishBitmask = getArray<byte>(0x4B1 - 1, 39);
+			_caughtFishBitmask = getArray<byte>(0x3EA, 180); //0x3EC
+			_caughtSpearfishBitmask = getArray<byte>(0x4B0, 39); //0x4B1
+			_unlockedMountsBitmask = getArray<byte>(0x2DD, 45); 
+			_unlockedOrnamentsBitmask = getArray<byte>(0x303, 7);
+			_unlockedGlassesStylesBitmask = getArray<byte>(0x30A, 2); //4
 		}
+
+		private static readonly string[] ClassJobs = {
+			"冒险", "剑术", "格斗", "斧术", "枪术", "弓术", "幻术", "咒术",
+			"刻木", "锻铁", "铸甲", "雕金", "制革", "裁衣", "炼金", "烹调", "采矿", "园艺", "捕鱼",
+			"骑士", "武僧", "战士", "龙骑", "诗人", "白魔", "黑魔", "秘术", "召唤", "学者", "双剑", "忍者",
+			"机工", "黑骑", "占星", "武士", "赤魔", "青魔", "绝枪", "舞者", "钐镰", "贤者", "蝰蛇", "绘灵"
+		};
+		private static readonly Dictionary<string, int> ClassJobLevelMap = new() {
+			["剑术"] = 1,
+			["骑士"] = 1,
+			["枪术"] = 4,
+			["龙骑"] = 4,
+			["赤魔"] = 24,
+			["青魔"] = 25,
+			["蝰蛇"] = 30,
+			["绘灵"] = 31,
+		};
 
 		protected override void UpdateAll() {
 			Update();
 			var QuestSpecialFlags = getValue<byte>(0x157);
+			var BirthMonth = getValue<byte>(0x153);
+			var BirthDay = getValue<byte>(0x154);
+			var _classJobLevels = getArray<short>(0x8A, 32);
+			var _desynthesisLevels = getArray<uint>(0x7D8, 8); //0x7E0
 			outStrDic = new Dictionary<string, string> {
+				["======调试信息======"] = "======调试信息======",
 				["IsLoaded"] = EasyStr<byte>(0x00),
 				["_characterName"] = EasyStr<byte>(0x01, 64, true),
 				["_onlineId"] = EasyStr<byte>(0x41, 17, true),
@@ -151,14 +162,14 @@ public static class Address {
 				["CurrentClassJobId"] = EasyStr<byte>(0x7E),
 				["CurrentClassJobRow"] = EasyStr<nint>(0x80),
 				["CurrentLevel"] = EasyStr<short>(0x88),
-				["_classJobLevels"] = EasyStr<short>(0x8A, 32),
+				["_classJobLevels"] = toString(_classJobLevels),
 				["_classJobExperience"] = EasyStr<int>(0xCC, 32),
 				["SyncedLevel"] = EasyStr<short>(0x14C),
 				["IsLevelSynced"] = EasyStr<byte>(0x14E),
 				["HasPremiumSaddlebag"] = EasyStr<bool>(0x14F),
 				["GuardianDeity"] = EasyStr<byte>(0x152),
-				["BirthMonth"] = EasyStr<byte>(0x153), //?
-				["BirthDay"] = EasyStr<byte>(0x154),
+				["BirthMonth"] = BirthMonth.ToString(),
+				["BirthDay"] = BirthDay.ToString(),
 				["FirstClass"] = EasyStr<byte>(0x155),
 				["StartTown"] = EasyStr<byte>(0x156),
 				["QuestSpecialFlags"] = QuestSpecialFlags.ToString(),
@@ -172,11 +183,11 @@ public static class Address {
 				["FreeAetheryteId"] = EasyStr<ushort>(0x2C0),
 				["FreeAetherytePlayStationPlus"] = EasyStr<ushort>(0x2C2),
 				["BaseRestedExperience"] = EasyStr<uint>(0x2C4),
-				["_unlockedMountsBitmask"] = EasyStr<byte>(0x2DD, 38),
-				["_unlockedOrnamentsBitmask"] = EasyStr<byte>(0x303, 7),
-				["_unlockedGlassesStylesBitmask"] = EasyStr<byte>(0x30A, 4),
-				["NumOwnedMounts"] = EasyStr<ushort>(0x30E),
-				["_unlockedSpearfishingNotebookBitmask"] = EasyStr<byte>(0x3C2, 8),
+				["_unlockedMountsBitmask"] =toString(_unlockedMountsBitmask) ,
+				["_unlockedOrnamentsBitmask"] = toString(_unlockedOrnamentsBitmask),
+				["_unlockedGlassesStylesBitmask"] = toString(_unlockedGlassesStylesBitmask), //4
+				["NumOwnedMounts"] = EasyStr<ushort>(0x30C), //0x30E
+				["_unlockedSpearfishingNotebookBitmask"] = EasyStr<byte>(0x3C0, 7), //0x3C2,8
 				["_caughtFishBitmask"] = toString(_caughtFishBitmask),
 				["NumFishCaught"] = EasyStr<uint>(0x4A0),
 				["FishingBait"] = EasyStr<uint>(0x4A4),
@@ -186,11 +197,24 @@ public static class Address {
 				["DeliveryLevel"] = EasyStr<byte>(0x5BD),
 				["ActiveGcArmyExpedition"] = EasyStr<ushort>(0x5CC),
 				["ActiveGcArmyTraining"] = EasyStr<ushort>(0x5CE),
-				["MentorVersion"] = EasyStr<ushort>(0x7DC),
-				["_desynthesisLevels"] = EasyStr<uint>(0x7E0, 8),
+				["_desynthesisLevels"] = toString(_desynthesisLevels),
 				["IsLegacy"] = ((QuestSpecialFlags & 1) != 0).ToString(),
-				["IsWarriorOfLight"] = ((QuestSpecialFlags & 2) != 0).ToString()
+				["IsWarriorOfLight"] = ((QuestSpecialFlags & 2) != 0).ToString(),
+				["======已计算======"] = "======已计算======",
+				// ["JobId"] = EasyStr<byte>(0x7E),
+				["生日"] = $"{(BirthMonth + 12 + 7) % 12 + 1}月{BirthDay}日(?",
 			};
+			for (var i = 0; i < ClassJobs.Length; i++) {
+				var detail = new StringBuilder();
+				var name = ClassJobs[i];
+				if (ClassJobLevelMap.TryGetValue(name, out var value))
+					detail.Append("等级[").Append(_classJobLevels[value]).Append("], ");
+				if (i is >= 8 and <= 15) {
+					var d = _desynthesisLevels[i - 8];
+					detail.Append("分解等级[").Append(d / 100).Append('.').Append(d % 100).Append("], ");
+				}
+				outStrDic[name] = detail.ToString();
+			}
 		}
 	}
 
@@ -230,7 +254,7 @@ public static class Address {
 		}
 
 		private void Update() {
-			_completedAchievements = getArray<byte>(0x0C, 488);
+			_completedAchievements = getArray<byte>(0x0C, 452); //488
 			State = ParseAchievementState(getValue<int>(0x08));
 		}
 
@@ -251,10 +275,10 @@ public static class Address {
 			outStrDic = new Dictionary<string, string> {
 				["State"] = State.ToString(),
 				["_completedAchievements"] = toString(_completedAchievements),
-				["ProgressRequestState"] = EasyStrA(0x218),
-				["ProgressAchievementId"] = EasyStr<uint>(0x21C),
-				["ProgressCurrent"] = EasyStr<uint>(0x220),
-				["ProgressMax"] = EasyStr<uint>(0x224)
+				["ProgressRequestState"] = EasyStrA(0x1F4), //0x218
+				["ProgressAchievementId"] = EasyStr<uint>(0x1F8), //0x21C
+				["ProgressCurrent"] = EasyStr<uint>(0x1FC), //0x220
+				["ProgressMax"] = EasyStr<uint>(0x200) //0x224
 			};
 		}
 

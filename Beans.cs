@@ -1,4 +1,5 @@
 ﻿using static LatihasExport.Beans.BFishType;
+using static LatihasExport.DumpAssets;
 
 namespace LatihasExport;
 
@@ -28,6 +29,18 @@ public static class Beans {
 
 		public override string ToString() {
 			return $"{Id},{Level},{Name},{Job},{Category},{Ing},{Description}\n";
+		}
+	}
+
+	internal record BSpecial(SpecialType Category, int Id, string Name) {
+		public const string Header = "完成情况,分类,序号,描述\n";
+		public readonly int Id = Id;
+		public readonly string Name = Name;
+		public readonly SpecialType Category = Category;
+		public bool Completed;
+
+		public override string ToString() {
+			return $"{Completed},{Category},{Id},{Name}\n";
 		}
 	}
 

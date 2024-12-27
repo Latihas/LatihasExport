@@ -13,6 +13,8 @@ using Newtonsoft.Json;
 using static System.Reflection.BindingFlags;
 using static LatihasExport.Beans;
 using static LatihasExport.Beans.BFishType;
+using static LatihasExport.DumpAssets.SpecialType;
+using Ornament = SaintCoinach.Xiv.Ornament;
 
 namespace LatihasExport;
 
@@ -20,12 +22,12 @@ public class Main : IActPluginV1 {
 	private static TextBox lab;
 	private TabPage _page;
 	private int buttonBount;
-	private string ROOTDIR;
+	private string OUTDIR;
+	internal static string ROOTDIR;
 	public static readonly bool[] Alive = { true };
 	private Address.PlayerStateAddress psa;
 	private Address.AchievementAddress aa;
 	private Address.RecipeNoteAddress rna;
-	private Address.InventoryManagerAddress ima;
 	private DumpAssets da;
 	private bool inited;
 
@@ -43,8 +45,8 @@ public class Main : IActPluginV1 {
 			psa = new Address.PlayerStateAddress(postnamazu.SigScanner, memory);
 			aa = new Address.AchievementAddress(postnamazu.SigScanner, memory);
 			rna = new Address.RecipeNoteAddress(postnamazu.SigScanner, memory);
-			ima = new Address.InventoryManagerAddress(postnamazu.SigScanner, memory);
-			ROOTDIR = ActGlobals.oFormActMain.PluginGetSelfData(this).pluginFile.DirectoryName + "/out/";
+			ROOTDIR = ActGlobals.oFormActMain.PluginGetSelfData(this).pluginFile.DirectoryName;
+			OUTDIR =  ROOTDIR + "/out/";
 			inited = true;
 		}
 	}
@@ -68,19 +70,44 @@ public class Main : IActPluginV1 {
 			};
 			AddButton("打开输出目录", (_, _) => {
 				if (!inited) Init();
-				if (!Directory.Exists(ROOTDIR)) Directory.CreateDirectory(ROOTDIR);
-				Process.Start(ROOTDIR);
+				if (!Directory.Exists(OUTDIR)) Directory.CreateDirectory(OUTDIR);
+				Process.Start(OUTDIR);
 			});
 			AddButton("角色状态", (_, _) => {
 				if (!inited) Init();
 				ClearLog();
 				Log(psa);
 			});
-			// AddButton("货币", (_, _) => {
-			// 	if (!inited) Init();
-			// 	ClearLog();
-			// 	Log(ima);
-			// });
+			AddButton("导出小玩意(坐骑、时尚配饰等)", (_, _) => {
+				if (!inited) Init();
+				ClearLog();
+				var mountarr = new BitArray(psa._unlockedMountsBitmask.ToArray());
+				var ornamentarr = new BitArray(psa._unlockedOrnamentsBitmask.ToArray());
+				Log(mountarr.Length);
+				Log(ornamentarr.Length);
+				var sb_all = new StringBuilder();
+				var sb_rest = new StringBuilder();
+				foreach (var s in da!.GetValidSpecial()) {
+					try {
+						if (s.Category == Mount) {
+							s.Completed = mountarr[s.Id];
+							if (!s.Completed) sb_rest.Append(s);
+						}
+						else if (s.Category == DumpAssets.SpecialType.Ornament) {
+							s.Completed = ornamentarr[s.Id];
+							if (!s.Completed) sb_rest.Append(s);
+						}
+						sb_all.Append(s);
+					}
+					catch (Exception e) {
+						Log(e.ToString());
+						Log(s);
+					}
+				}
+				WriteFile("special_all.csv", sb_all);
+				WriteFile("special_rest.csv", sb_rest);
+				Log($"导出成功。");
+			});
 			AddButton("导出制作笔记", (b, _) => {
 				if (!inited) Init();
 				if (MessageBox.Show("这(或许)将耗费巨量时间", "开始确认", MessageBoxButtons.OKCancel) != DialogResult.OK) return;
@@ -108,13 +135,12 @@ public class Main : IActPluginV1 {
 							sbj.Remove(sbj.Length - 1, 1).Append(']');
 							lis.Add(new BRecipe(i.Key, i.RecipeLevelTable.ClassJobLevel, i.ToString(), i.ClassJob.ToString(), i.ResultItem.ItemSearchCategory.ToString(), sbj.ToString(), i.ResultItem.Description));
 						}
-						var time = DateTime.Now.ToFileTime();
 						var sb = new StringBuilder(BRecipe.Header);
 						foreach (var i in lis) sb.Append(i);
-						WriteFile($"{time}_recipe_rest.csv", sb);
+						WriteFile("recipe_rest.csv", sb);
 						var sb2 = new StringBuilder("材料,数量\n");
 						foreach (var x in dic) sb2.Append($"{x.Key},{x.Value}\n");
-						WriteFile($"{time}_recipe_rest_material.csv", sb2);
+						WriteFile("recipe_rest_material.csv", sb2);
 						Log("导出完成。");
 						((Button)b).Enabled = true;
 					}
@@ -147,36 +173,35 @@ public class Main : IActPluginV1 {
 					else sb_rest.Append(fish);
 					sb_all.Append(fish);
 				}
-				var time = DateTime.Now.ToFileTime();
-				WriteFile($"{time}_fish_done.json", "{\"completed\":" + JsonConvert.SerializeObject(completed) + "}");
-				WriteFile($"{time}_fish_rest.csv", sb_rest);
-				WriteFile($"{time}_fish_all.csv", sb_all);
+				WriteFile("fish_done.json", "{\"completed\":" + JsonConvert.SerializeObject(completed) + "}");
+				WriteFile("fish_rest.csv", sb_rest);
+				WriteFile("fish_all.csv", sb_all);
 				Log($"导出成功。完成{completed.Count},剩余{fishes.Count - completed.Count}。");
 			});
 			AddButton("导出成就", (_, _) => {
 				if (!inited) Init();
 				ClearLog();
 				Log(aa);
-				if (aa.State == Address.AchievementAddress.AchievementState.Loaded) {
-					var sb_rest = new StringBuilder(BAchievement.Header);
-					var sb_all = new StringBuilder(BAchievement.Header);
-					var bitarr = new BitArray(aa._completedAchievements.ToArray());
-					var achievements = da!.GetValidAchievement();
-					var completed = 0;
-					foreach (var achievement in achievements) {
-						achievement.Completed = bitarr[achievement.Id];
-						if (!achievement.Completed) {
-							sb_rest.Append(achievement);
-							completed++;
-						}
-						sb_all.Append(achievement);
-					}
-					var time = DateTime.Now.ToFileTime();
-					WriteFile($"{time}_achievement_all.csv", sb_all);
-					WriteFile($"{time}_achievement_rest.csv", sb_rest);
-					Log($"导出成功。完成{completed},剩余{achievements.Count - completed}。");
+				if (aa.State != Address.AchievementAddress.AchievementState.Loaded) {
+					Log("导出失败，请打开一次成就页面使State变为Loaded");
+					return;
 				}
-				else Log("导出失败，请打开一次成就页面使State变为Loaded");
+				var sb_rest = new StringBuilder(BAchievement.Header);
+				var sb_all = new StringBuilder(BAchievement.Header);
+				var bitarr = new BitArray(aa._completedAchievements.ToArray());
+				var achievements = da!.GetValidAchievement();
+				var completed = 0;
+				foreach (var achievement in achievements) {
+					achievement.Completed = bitarr[achievement.Id];
+					if (!achievement.Completed) {
+						sb_rest.Append(achievement);
+						completed++;
+					}
+					sb_all.Append(achievement);
+				}
+				WriteFile("achievement_all.csv", sb_all);
+				WriteFile("achievement_rest.csv", sb_rest);
+				Log($"导出成功。完成{completed},剩余{achievements.Count - completed}。");
 			});
 
 			page.Controls.Add(lab);
@@ -204,8 +229,8 @@ public class Main : IActPluginV1 {
 	}
 
 	private void WriteFile(string name, object content) {
-		if (!Directory.Exists(ROOTDIR)) Directory.CreateDirectory(ROOTDIR);
-		File.WriteAllText(ROOTDIR + name, content.ToString(), Encoding.UTF8);
+		if (!Directory.Exists(OUTDIR)) Directory.CreateDirectory(OUTDIR);
+		File.WriteAllText(OUTDIR + name, content.ToString(), Encoding.UTF8);
 	}
 
 	public static void Log(object text) {
