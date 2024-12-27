@@ -44,7 +44,9 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记(做赐福工具�
 
 ## 二次开发方法
 
-不会就提交Issue，有时候懒b了但是游戏更新了导致失效可以更新Definitions文件夹内信息(比如即将到来的7.1需要改Recipe.json等)，要大改请修改.csproj中的ActRoot等信息。SaintCoinach设置的是国服。
+不会就提交Issue。
+有时候懒b了但是游戏更新了导致失效可以更新Definitions文件夹内信息(比如即将到来的7.1需要改Recipe.json等)。部分内存数据可能会在注释里含有新版信息，以FFXIVClientStructs中的信息为准。
+要大改请修改.csproj中的ActRoot等信息。SaintCoinach设置的是国服。
 
 ## 一些笔记
 
@@ -59,8 +61,8 @@ SaintCoinach拉下来仅保留该项目与DotSquish。删除SaintCoinach.csproj�
 		...
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
-    <ItemGroup>
-        ...
+	<ItemGroup>
+		...
 		<Compile Include="SaintCoinach\**"/>
 		<Compile Include="DotSquish\**"/>
 	</ItemGroup>
@@ -70,7 +72,7 @@ SaintCoinach拉下来仅保留该项目与DotSquish。删除SaintCoinach.csproj�
 
 ## 参考文献
 
-- https://github.com/aers/FFXIVClientStructs (目前国服版本7.05,推测为240808左右的分支数据)
+- https://github.com/aers/FFXIVClientStructs (目前国服版本7.05,有可能需要找前几个Commit)
 - https://github.com/Ariiisu/ExportFishLog
 - Definitions文件夹从 https://github.com/xivapi/SaintCoinach (最后一个.Net4版本)拾取，该文件夹与.Net版本无关，国服不能用找最新版之前的几个Commit即可
 - GreyMagic.dll是从 https://github.com/Natsukage/PostNamazu 拾取
