@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<ProjectReference Include="../LatihasExport.Core/LatihasExport.Core.csproj"/>
+	</ItemGroup>
+	<PropertyGroup>
+		<ActRoot>D:\Program\ACT.DieMoe</ActRoot>
+		<OutputPath>$(ActRoot)\Plugins\LatihasExport</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	</PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net481</TargetFramework>
+		<LangVersion>10</LangVersion>
+		<PlatformTarget>x64</PlatformTarget>
+		<Optimize>true</Optimize>
+		<DebugSymbols>false</DebugSymbols>
+		<DebugType>none</DebugType>
+	</PropertyGroup>
+	<ItemGroup>
+		<Reference Include="Advanced Combat Tracker">
+			<HintPath>$(ActRoot)/DLibs/Advanced Combat Tracker.dll</HintPath>
+		</Reference>
+		<Reference Include="System.Windows.Forms"/>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="libs/*" CopyToOutputDirectory="PreserveNewest"/>
+		<Content Include="Definitions/*" CopyToOutputDirectory="PreserveNewest"/>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0"/>
+	</ItemGroup>
+	<Target Name="DeleteFiles" AfterTargets="Build">
+		<ItemGroup>
+			<FilesToDelete Include="$(OutputPath)/*.dll" Exclude="$(OutputPath)/LatihasExport.dll"/>
+		</ItemGroup>
+		<Delete Files="@(FilesToDelete)"/>
+	</Target>
+</Project>
