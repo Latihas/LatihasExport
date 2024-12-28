@@ -12,9 +12,23 @@ FF14的钓鱼笔记(支持鱼糕导出)、成就、制作笔记(做赐福工具�
 
 ### 配置
 
-将`EntityFramework.dll`放入ACT的DLL加载目录(如`$(ActRoot)/DLibs/EntityFramework.dll`)，这个dll由于神奇的原因打包不进去。
+解压压缩包，文件结构不动，放入推荐路径`$(ActRoot)/Plugins/LatihasExport/`中，看起来像这样：
 
-将`Definitions`文件夹与`LatihasExport.dll`放在一起，推荐路径`$(ActRoot)/Plugins/LatihasExport/`。会在`LatihasExport.dll`相同目录下生成out输出文件夹。
+```
+$(ActRoot)/
+│   ...
+└── Plugins/
+	│   ...
+	└── LatihasExport/
+		├── Definitions/
+		│   └── xxx.json
+		├── libs/
+		│   ├── EntityFramework.dll
+		│   └── LatihasExport.Core.dll
+		└── LatihasExport.dll
+```
+
+会在`LatihasExport.dll`相同目录下生成out输出文件夹。
 
 ### 依赖
 
@@ -74,6 +88,7 @@ SaintCoinach拉下来仅保留该项目与DotSquish。删除SaintCoinach.csproj�
 
 ## 参考文献
 
+- 银山雀儿(Silver Dasher)，具体开源地址没找到
 - https://github.com/aers/FFXIVClientStructs (目前国服版本7.05,有可能需要找前几个Commit)
 - https://github.com/Ariiisu/ExportFishLog
 - Definitions文件夹从 https://github.com/xivapi/SaintCoinach (241125)拾取，该文件夹与SaintCoinach版本无关，国服不能用找最新版之前的几个Commit即可
