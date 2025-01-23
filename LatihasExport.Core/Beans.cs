@@ -22,13 +22,13 @@ public static class Beans {
 		}
 	}
 
-	internal record BRecipe(int Id, int Level, string Name, string Job, string Category, string Ing, string Description) {
-		public const string Header = "序号,等级,名字,职业,分类,材料,描述\n";
+	internal record BRecipe(int Id, int Level, string Name, string Job, string Category, string Ing, string Description, bool Completed) {
+		public const string Header = "完成情况,序号,等级,名字,职业,分类,材料,描述\n";
 		public readonly int Id = Id, Level = Level;
 		public readonly string Name = Name, Job = Job, Category = Category, Ing = Ing, Description = Description.Replace("\r\n", "");
-
+		public bool Completed = Completed;
 		public override string ToString() {
-			return $"{Id},{Level},{Name},{Job},{Category},{Ing},{Description}\n";
+			return $"{Completed},{Id},{Level},{Name},{Job},{Category},{Ing},{Description}\n";
 		}
 	}
 

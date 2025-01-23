@@ -12,10 +12,8 @@ using Achievement = SaintCoinach.Xiv.Achievement;
 public class DumpAssets {
 	private readonly ARealmReversed realm;
 
-	internal DumpAssets(Process p) {
-		var fullp = p.MainModule?.FileName;
-		var GameDirectory = fullp?.Substring(0, fullp.Length - @"game\ffxiv_dx11.exe".Length - 1);
-		realm = new ARealmReversed(GameDirectory, Language.ChineseSimplified);
+	internal DumpAssets(string gd) {
+		realm = new ARealmReversed(gd, Language.ChineseSimplified);
 	}
 
 	internal IEnumerable<BFish> GetValidFishParameter() {
@@ -50,10 +48,6 @@ public class DumpAssets {
 	}
 
 	internal List<Recipe> GetValidRecipe() {
-		return realm.GameData.GetSheet<Recipe>().Where(i =>
-			// i.RecipeLevelTable.Stars == 0
-			i.Key != 0
-			&& i.Key < 30000
-			&& i.ToString() != "").ToList();
+		return realm.GameData.GetSheet<Recipe>().Where(i => i.Key < 30000 && i.ToString() != "").ToList();
 	}
 }
