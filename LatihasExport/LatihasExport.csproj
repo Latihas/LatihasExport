@@ -1,41 +1,46 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-	<ItemGroup>
-		<ProjectReference Include="../LatihasExport.Core/LatihasExport.Core.csproj"/>
-	</ItemGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<ActRoot>D:\Program\ACT.DieMoe</ActRoot>
-		<OutputPath>$(ActRoot)\Plugins\LatihasExport</OutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-	</PropertyGroup>
-	<PropertyGroup>
-		<OutputType>Library</OutputType>
-		<TargetFramework>net481</TargetFramework>
-		<LangVersion>latest</LangVersion>
+		<AssemblyName>LatihasExport</AssemblyName>
+		<TargetFramework>net9.0-windows</TargetFramework>
 		<PlatformTarget>x64</PlatformTarget>
-		<Optimize>true</Optimize>
-		<DebugSymbols>false</DebugSymbols>
-		<DebugType>none</DebugType>
+		<UseWindowsForms>true</UseWindowsForms>
+<!--		<Optimize>true</Optimize>-->
+<!--		<DebugSymbols>false</DebugSymbols>-->
+<!--		<DebugType>none</DebugType>-->
+	</PropertyGroup>
+	<PropertyGroup>
+		<LangVersion>Latest</LangVersion>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<XIVLauncherPath>$(userprofile)\AppData\Roaming\XIVLauncherCN</XIVLauncherPath>
+		<DalamudPath>$(XIVLauncherPath)\addon\Hooks\dev</DalamudPath>
+		<NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-		<Reference Include="Advanced Combat Tracker">
-			<HintPath>$(ActRoot)/DLibs/Advanced Combat Tracker.dll</HintPath>
+		<Reference Include="Lumina">
+			<HintPath>$(DalamudPath)\Lumina.dll</HintPath>
 		</Reference>
-		<Reference Include="System.Windows.Forms"/>
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0"/>
+		<Reference Include="Lumina.Excel">
+			<HintPath>$(DalamudPath)\Lumina.Excel.dll</HintPath>
+		</Reference>
+		<Reference Include="Dalamud">
+			<HintPath>$(DalamudPath)\Dalamud.dll</HintPath>
+		</Reference>
+		<Reference Include="FFXIVClientStructs">
+			<HintPath>$(DalamudPath)\FFXIVClientStructs.dll</HintPath>
+		</Reference>
+		<Reference Include="InteropGenerator.Runtime">
+			<HintPath>$(DalamudPath)\InteropGenerator.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="ImGui.NET">
+			<HintPath>$(DalamudPath)\Dalamud.Bindings.ImGui.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<ItemGroup>
-		<Content Include="libs/*" CopyToOutputDirectory="PreserveNewest"/>
-		<Content Include="Definitions/*" CopyToOutputDirectory="PreserveNewest"/>
-		<Content Include="Generated/*" CopyToOutputDirectory="PreserveNewest"/>
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="libs\" />
+		<Content Include="LatihasExport.json" CopyToOutputDirectory="PreserveNewest"/>
 	</ItemGroup>
 	<Target Name="DeleteFiles" AfterTargets="Build">
 		<ItemGroup>
-			<FilesToDelete Include="$(OutputPath)/*.dll" Exclude="$(OutputPath)/LatihasExport.dll"/>
+			<FilesToDelete Include="$(OutputPath)/*" Exclude="$(OutputPath)/LatihasExport*"/>
 		</ItemGroup>
 		<Delete Files="@(FilesToDelete)"/>
 	</Target>

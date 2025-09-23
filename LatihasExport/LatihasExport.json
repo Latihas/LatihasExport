@@ -1,0 +1,21 @@
+{
+	"Author": "Latihas",
+	"Name": "LatihasExport",
+	"InternalName": "LatihasExport",
+	"AssemblyVersion": "1.0.0.0",
+	"Description": "自用收集工具",
+	"ApplicableVersion": "any",
+	"Tags": [],
+	"DalamudApiLevel": 13,
+	"LoadRequiredState": 0,
+	"LoadSync": false,
+	"CanUnloadAsync": false,
+	"LoadPriority": 0,
+	"IconUrl": "",
+	"Punchline": "自用收集工具",
+	"AcceptsFeedback": true,
+	"RepoUrl": "",
+	"DownloadLinkInstall": "",
+	"DownloadLinkTesting": "",
+	"DownloadLinkUpdate": ""
+}
