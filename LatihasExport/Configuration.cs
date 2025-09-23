@@ -6,17 +6,9 @@ namespace LatihasExport;
 
 [Serializable]
 public class Configuration : IPluginConfiguration {
-	public string SavePath="";
-
-	[NonSerialized] private IDalamudPluginInterface _pluginInterface;
+	public string SavePath = "";
 
 	public int Version { get; set; }
 
-	public void Initialize(IDalamudPluginInterface pluginInterface) {
-		_pluginInterface = pluginInterface;
-	}
-
-	public void Save() {
-		_pluginInterface.SavePluginConfig(this);
-	}
+	public void Save() => Plugin.PluginInterface.SavePluginConfig(this);
 }

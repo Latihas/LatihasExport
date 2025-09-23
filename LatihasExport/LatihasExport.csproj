@@ -4,9 +4,9 @@
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<PlatformTarget>x64</PlatformTarget>
 		<UseWindowsForms>true</UseWindowsForms>
-<!--		<Optimize>true</Optimize>-->
-<!--		<DebugSymbols>false</DebugSymbols>-->
-<!--		<DebugType>none</DebugType>-->
+		<Optimize>true</Optimize>
+		<DebugSymbols>false</DebugSymbols>
+		<DebugType>none</DebugType>
 	</PropertyGroup>
 	<PropertyGroup>
 		<LangVersion>Latest</LangVersion>
@@ -27,9 +27,6 @@
 		</Reference>
 		<Reference Include="FFXIVClientStructs">
 			<HintPath>$(DalamudPath)\FFXIVClientStructs.dll</HintPath>
-		</Reference>
-		<Reference Include="InteropGenerator.Runtime">
-			<HintPath>$(DalamudPath)\InteropGenerator.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="ImGui.NET">
 			<HintPath>$(DalamudPath)\Dalamud.Bindings.ImGui.dll</HintPath>
