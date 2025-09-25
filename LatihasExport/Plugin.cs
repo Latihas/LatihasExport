@@ -35,7 +35,7 @@ public sealed class Plugin : IDalamudPlugin {
 	[PluginService] internal static IDataManager DataManager { get; private set; }
 	[PluginService] internal static ITextureProvider TextureProvider { get; private set; }
 	[PluginService] internal static IPluginLog Log { get; private set; }
-	[PluginService] internal ICommandManager CommandManager { get; }
+	[PluginService] private ICommandManager CommandManager { get; set; }
 	public static Configuration Configuration { get; private set; }
 
 	public void Dispose() {
