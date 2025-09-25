@@ -31,12 +31,17 @@ public sealed class Plugin : IDalamudPlugin {
 		}
 	}
 
-	[PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; }
-	[PluginService] internal static IDataManager DataManager { get; private set; }
-	[PluginService] internal static ITextureProvider TextureProvider { get; private set; }
-	[PluginService] internal static IPluginLog Log { get; private set; }
-	[PluginService] private ICommandManager CommandManager { get; set; }
 	public static Configuration Configuration { get; private set; }
+
+	[PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; }
+	// ReSharper disable once UnusedAutoPropertyAccessor.Local
+	[PluginService] internal static IDataManager DataManager { get; private set; }
+	// ReSharper disable once UnusedAutoPropertyAccessor.Local
+	[PluginService] internal static ITextureProvider TextureProvider { get; private set; }
+	// ReSharper disable once UnusedAutoPropertyAccessor.Local
+	[PluginService] internal static IPluginLog Log { get; private set; }
+	// ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+	[PluginService] private ICommandManager CommandManager { get; set; }
 
 	public void Dispose() {
 		WindowSystem.RemoveAllWindows();
