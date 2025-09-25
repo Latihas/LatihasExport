@@ -152,6 +152,7 @@ public class MainWindow() : Window("LatihasExport") {
 					foreach (var res in _lsFishCaught) sb.Append(res).Append(',');
 					sb.Remove(sb.Length - 1, 1).Append("]}");
 					WriteFile("fish.json", sb.ToString());
+					Plugin.Log.Info("导完了");
 				}
 				ImGui.SameLine();
 				if (ImGui.Button("打开鱼糕")) Start("https://fish.ffmomola.com/ng/#/wiki/fishing");
@@ -187,6 +188,7 @@ public class MainWindow() : Window("LatihasExport") {
 					}
 					sb.Remove(sb.Length - 1, 1).Append(']');
 					WriteFile("ttc.json", sb.ToString());
+					Plugin.Log.Info("导完了");
 				}
 				ImGui.SameLine();
 				if (ImGui.Button("打开arrtripletriad.com")) Start("https://arrtripletriad.com/cn/huan-ka-yi-lan");
