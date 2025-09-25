@@ -15,15 +15,15 @@ public sealed class Plugin : IDalamudPlugin {
 		PluginInterface = pluginInterface;
 		CommandManager = commandManager;
 		Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-		MainWindow = new MainWindow();
-		WindowSystem.AddWindow(MainWindow);
+		_mainWindow = new MainWindow();
+		WindowSystem.AddWindow(_mainWindow);
 		var p = new CommandInfo(OnCommand) {
 			HelpMessage = "打开主界面"
 		};
 		CommandManager.AddHandler("/le", p);
 		CommandManager.AddHandler("/latihasexport", p);
 		PluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
-		PluginInterface.UiBuilder.OpenConfigUi += () => OnCommand(null, null);
+		PluginInterface.UiBuilder.OpenMainUi += () => OnCommand(null, null);
 		if (Configuration.SavePath == "") {
 			Configuration.SavePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "LatihasExport");
 			Configuration.Save();
@@ -37,7 +37,7 @@ public sealed class Plugin : IDalamudPlugin {
 	[PluginService] internal ICommandManager CommandManager { get; private set; }
 	public static Configuration Configuration { get; private set; }
 
-	private MainWindow MainWindow { get; init; }
+	private readonly MainWindow _mainWindow;
 
 	public void Dispose() {
 		WindowSystem.RemoveAllWindows();
@@ -46,7 +46,7 @@ public sealed class Plugin : IDalamudPlugin {
 	}
 
 	private void OnCommand(string command, string args) {
-		MainWindow. RefreshData();
-		MainWindow.Toggle();
+		MainWindow.RefreshData();
+		_mainWindow.Toggle();
 	}
 }
