@@ -10,27 +10,30 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Achievement = FFXIVClientStructs.FFXIV.Client.Game.UI.Achievement;
 using Action = System.Action;
+using InstanceContent = Lumina.Excel.Sheets.InstanceContent;
+using PublicContent = FFXIVClientStructs.FFXIV.Client.Game.UI.PublicContent;
 
 namespace LatihasExport;
 
 public class MainWindow() : Window("LatihasExport") {
 	private const ImGuiTableFlags ImGuiTableFlag = ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.RowBg;
 
-	private static IEnumerable<Item> _lRecipe;
-	private static IEnumerable<uint> _lFishCaught, _lsFishCaught;
-	private static IEnumerable<FishParameter> _lFishUnCaught;
-	private static IEnumerable<SpearfishingItem> _lsFishUnCaught;
-	private static IEnumerable<Lumina.Excel.Sheets.Achievement> _lAchievement;
-	private static IEnumerable<TripleTriadCard> _lTripleTriadCard;
-	private static IEnumerable<Leve> _lLeve;
-	private static IEnumerable<Quest> _lQuest;
-	private static IEnumerable<Orchestrion> _lOrchestrion;
-	private static IEnumerable<Mount> _lMount;
-	private static IEnumerable<Ornament> _lOrnament;
-	private static IEnumerable<Glasses> _lGlasses;
+	private static List<Item> _lRecipe;
+	private static List<uint> _lFishCaught, _lsFishCaught;
+	private static List<FishParameter> _lFishUnCaught;
+	private static List<SpearfishingItem> _lsFishUnCaught;
+	private static List<Lumina.Excel.Sheets.Achievement> _lAchievement;
+	private static List<TripleTriadCard> _lTripleTriadCard;
+	private static List<Leve> _lLeve;
+	private static List<Quest> _lQuest;
+	private static List<Orchestrion> _lOrchestrion;
+	private static List<Mount> _lMount;
+	private static List<Ornament> _lOrnament;
+	private static List<Glasses> _lGlasses;
 	private static unsafe PlayerState* _playerStateInstance;
 	private static unsafe Achievement* _achievementInstance;
 	private static unsafe QuestManager* _questManagerInstance;
@@ -51,6 +54,10 @@ public class MainWindow() : Window("LatihasExport") {
 		File.WriteAllText(Path.Combine(_configuration.SavePath, fn), content);
 	}
 
+	private static List<T> Gl<T>(Func<T, bool> predicate) where T : struct, IExcelRow<T> {
+		return Plugin.DataManager.GameData.GetExcelSheet<T>()!
+			.Where(predicate).ToList();
+	}
 
 	internal static unsafe void RefreshData() {
 		try {
@@ -61,34 +68,27 @@ public class MainWindow() : Window("LatihasExport") {
 				})
 				.Where(t => t.a < 30000 && !QuestManager.IsRecipeComplete(t.a))
 				.Select(t => t.x.ItemResult.Value)
-				.Where(t => t.Name != "");
+				.Where(t => t.Name != "").ToList();
 			_playerStateInstance = PlayerState.Instance();
 			_achievementInstance = Achievement.Instance();
 			_questManagerInstance = QuestManager.Instance();
 			_achievementLoaded = _achievementInstance->IsLoaded();
-			var tmp = Plugin.DataManager.GameData.GetExcelSheet<FishParameter>()!
-				.Where(i => i.IsInLog && i.Text != "").ToList();
-			_lFishCaught = tmp.Where(i => _playerStateInstance->IsFishCaught(i.RowId)).Select(i => i.Item.RowId);
-			_lFishUnCaught = tmp.Where(i => !_playerStateInstance->IsFishCaught(i.RowId));
-			var tmp2 = Plugin.DataManager.GameData.GetExcelSheet<SpearfishingItem>()!.Where(i => i.IsVisible).ToList();
-			_lsFishCaught = tmp2.Where(i => _playerStateInstance->IsSpearfishCaught(i.RowId)).Select(i => i.Item.RowId);
-			_lsFishUnCaught = tmp2.Where(i => !_playerStateInstance->IsSpearfishCaught(i.RowId));
+			var tmp = Gl<FishParameter>(i => i.IsInLog && i.Text != "");
+			_lFishCaught = tmp.Where(i => _playerStateInstance->IsFishCaught(i.RowId)).Select(i => i.Item.RowId).ToList();
+			_lFishUnCaught = tmp.Where(i => !_playerStateInstance->IsFishCaught(i.RowId)).ToList();
+			var tmp2 = Gl<SpearfishingItem>(i => i.IsVisible);
+			_lsFishCaught = tmp2.Where(i => _playerStateInstance->IsSpearfishCaught(i.RowId)).Select(i => i.Item.RowId).ToList();
+			_lsFishUnCaught = tmp2.Where(i => !_playerStateInstance->IsSpearfishCaught(i.RowId)).ToList();
 			if (_achievementLoaded)
-				_lAchievement = Plugin.DataManager.GameData.GetExcelSheet<Lumina.Excel.Sheets.Achievement>()!
-					.Where(i => !_achievementInstance->IsComplete((int)i.RowId) && i.Name != "" && !i.AchievementHideCondition.Value.HideAchievement &&
-					            i.AchievementCategory.Value.AchievementKind.Value.RowId is not (13 or 8 or 0));
-			_lTripleTriadCard = Plugin.DataManager.GameData.GetExcelSheet<TripleTriadCard>()!.Where(i => i.RowId > 0 && i.Name != "" && !UIState.Instance()->IsTripleTriadCardUnlocked((ushort)i.RowId));
-			_lLeve = Plugin.DataManager.GameData.GetExcelSheet<Leve>()!.Where(i => !_questManagerInstance->IsLevequestComplete((ushort)i.RowId) && i.AllowanceCost != 0 && i is { RowId: > 0, GilReward: > 0 });
-			_lQuest = Plugin.DataManager.GameData.GetExcelSheet<Quest>()!.Where(i =>
-				!UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted((ushort)i.RowId + 0x10000u) && i.PlaceName.Value.Name != "" && i.JournalGenre.RowId > 0 && i.JournalGenre.Value.JournalCategory.Value.RowId != 96);
-			_lOrchestrion = Plugin.DataManager.GameData.GetExcelSheet<Orchestrion>()!.Where(i =>
-				!_playerStateInstance->IsOrchestrionRollUnlocked(i.RowId) && i.Name != "");
-			_lMount = Plugin.DataManager.GameData.GetExcelSheet<Mount>()!.Where(i =>
-				!_playerStateInstance->IsMountUnlocked(i.RowId) && i.Icon != 0);
-			_lOrnament = Plugin.DataManager.GameData.GetExcelSheet<Ornament>()!.Where(i =>
-				!_playerStateInstance->IsOrnamentUnlocked(i.RowId) && i.RowId > 0);
-			_lGlasses = Plugin.DataManager.GameData.GetExcelSheet<Glasses>()!.Where(i =>
-				!_playerStateInstance->IsGlassesUnlocked((ushort)i.RowId) && i.RowId > 0);
+				_lAchievement = Gl<Lumina.Excel.Sheets.Achievement>(i =>
+					!_achievementInstance->IsComplete((int)i.RowId) && i.Name != "" && !i.AchievementHideCondition.Value.HideAchievement && i.AchievementCategory.Value.AchievementKind.Value.RowId is not (13 or 8 or 0));
+			_lTripleTriadCard = Gl<TripleTriadCard>(i => i.RowId > 0 && i.Name != "" && !UIState.Instance()->IsTripleTriadCardUnlocked((ushort)i.RowId));
+			_lLeve = Gl<Leve>(i => !_questManagerInstance->IsLevequestComplete((ushort)i.RowId) && i.AllowanceCost != 0 && i is { RowId: > 0, GilReward: > 0 });
+			_lQuest = Gl<Quest>(i => !UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted((ushort)i.RowId + 0x10000u) && i.PlaceName.Value.Name != "" && i.JournalGenre.RowId > 0 && i.JournalGenre.Value.JournalCategory.Value.RowId != 96);
+			_lOrchestrion = Gl<Orchestrion>(i => !_playerStateInstance->IsOrchestrionRollUnlocked(i.RowId) && i.Name != "");
+			_lMount = Gl<Mount>(i => !_playerStateInstance->IsMountUnlocked(i.RowId) && i.Icon != 0);
+			_lOrnament = Gl<Ornament>(i => !_playerStateInstance->IsOrnamentUnlocked(i.RowId) && i.RowId > 0);
+			_lGlasses = Gl<Glasses>(i => !_playerStateInstance->IsGlassesUnlocked((ushort)i.RowId) && i.RowId > 0);
 		}
 		catch (Exception e) {
 			Plugin.Log.Error(e.ToString());
@@ -99,7 +99,7 @@ public class MainWindow() : Window("LatihasExport") {
 		UseShellExecute = true
 	});
 
-	private static void NewTable<T>(string[] header, IEnumerable<T> data, Action<T>[] acts) {
+	private static void NewTable<T>(string[] header, List<T> data, Action<T>[] acts) {
 		if (ImGui.BeginTable("Table", acts.Length, ImGuiTableFlag)) {
 			foreach (var item in header) {
 				if (item == "") ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 24);
@@ -107,13 +107,13 @@ public class MainWindow() : Window("LatihasExport") {
 				else ImGui.TableSetupColumn(item);
 			}
 			ImGui.TableHeadersRow();
-			foreach (var res in data) {
-				ImGui.TableNextRow();
-				for (var i = 0; i < acts.Length; i++) {
-					ImGui.TableSetColumnIndex(i);
-					acts[i](res);
+				foreach (var res in data) {
+					ImGui.TableNextRow();
+					for (var i = 0; i < acts.Length; i++) {
+						ImGui.TableSetColumnIndex(i);
+						acts[i](res);
+					}
 				}
-			}
 			ImGui.EndTable();
 		}
 	}
@@ -217,29 +217,85 @@ public class MainWindow() : Window("LatihasExport") {
 					res => ImGui.Text(res.JournalGenre.Value.JournalCategory.Value.JournalSection.Value.Name.ToString())
 				]));
 			NewTab("乐谱", () =>
-				NewTable(["序号", "名称"],
-					_lOrchestrion, [
-						res => ImGui.Text(res.RowId.ToString()),
-						res => ImGui.Text(res.Name.ToString())
-					]));
+				NewTable(["序号", "名称"], _lOrchestrion, [
+					res => ImGui.Text(res.RowId.ToString()),
+					res => ImGui.Text(res.Name.ToString())
+				]));
 			NewTab("坐骑", () =>
-				NewTable(["序号", "名称"], _lMount, [
+				NewTable(["序号", "", "名称"], _lMount, [
 					res => ImGui.Text(res.RowId.ToString()),
 					res => RenderIcon(res.Icon),
 					res => ImGui.Text(res.Singular.ToString())
 				]));
 			NewTab("装饰", () =>
-				NewTable(["序号", "名称"], _lOrnament, [
+				NewTable(["序号", "", "名称"], _lOrnament, [
 					res => ImGui.Text(res.RowId.ToString()),
 					res => RenderIcon(res.Icon),
 					res => ImGui.Text(res.Singular.ToString())
 				]));
 			NewTab("眼镜", () =>
-				NewTable(["序号", "名称"], _lGlasses, [
+				NewTable(["序号", "", "名称"], _lGlasses, [
 					res => ImGui.Text(res.RowId.ToString()),
 					res => RenderIcon(res.Icon),
 					res => ImGui.Text(res.Singular.ToString())
 				]));
+			NewTab("表情", () => {
+				unsafe {
+					NewTable(["序号", "", "名称"], Gl<Emote>(i =>
+						!UIState.Instance()->IsEmoteUnlocked((ushort)i.RowId) && i.Icon != 0), [
+						res => ImGui.Text(res.RowId.ToString()),
+						res => RenderIcon(res.Icon),
+						res => ImGui.Text(res.Name.ToString())
+					]);
+				}
+			});
+			NewTab("教程", () => {
+				unsafe {
+					NewTable(["序号", "分类", "名称"], Gl<HowTo>(i =>
+						!UIState.Instance()->IsHowToUnlocked(i.RowId) && i.Name != ""), [
+						res => ImGui.Text(res.RowId.ToString()),
+						res => ImGui.Text(res.Category.Value.Category.ToString()),
+						res => ImGui.Text(res.Name.ToString())
+					]);
+				}
+			});
+			NewTab("宠物", () => {
+				unsafe {
+					NewTable(["序号", "", "名称"], Gl<Companion>(i =>
+						!UIState.Instance()->IsCompanionUnlocked(i.RowId) && i.Icon != 0), [
+						res => ImGui.Text(res.RowId.ToString()),
+						res => RenderIcon(res.Icon),
+						res => ImGui.Text(res.Singular.ToString())
+					]);
+				}
+			});
+			// NewTab("陆行鸟车", () => {
+			// 	unsafe {
+			// 		NewTable(["序号", "名称"], Gl<ChocoboTaxiStand>(i =>
+			// 			!UIState.Instance()->IsChocoboTaxiStandUnlocked(i.RowId)), [
+			// 			res => ImGui.Text(res.RowId.ToString()),
+			// 			res => ImGui.Text(res.PlaceName.ToString())
+			// 		]);
+			// 	}
+			// });
+			// NewTab("副本", () => {
+			// 	unsafe {
+			// 		NewTable([], Gl< Lumina.Excel.Sheets.PublicContent>(i =>
+			// 			!UIState.IsPublicContentCompleted(i.RowId)), [
+			// 			res => ImGui.Text(res.RowId.ToString()),
+			// 			res =>ImGui.Text(res.Name.ToString())
+			// 		]);
+			// 	}
+			// });
+			NewTab("过场动画", () => {
+				unsafe {
+					NewTable([], Gl<Cutscene>(i =>
+						!UIState.Instance()->IsCutsceneSeen(i.RowId)), [
+						res => ImGui.Text(res.RowId.ToString()),
+						res => ImGui.Text(res.Path.ToString()),
+					]);
+				}
+			});
 			ImGui.EndTabBar();
 		}
 	}

@@ -12,9 +12,7 @@ public sealed class Plugin : IDalamudPlugin {
 	private readonly MainWindow _mainWindow;
 	public readonly WindowSystem WindowSystem = new("LatihasExport");
 
-	public Plugin(IDalamudPluginInterface pluginInterface, ICommandManager commandManager) {
-		PluginInterface = pluginInterface;
-		CommandManager = commandManager;
+	public Plugin() {
 		Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 		_mainWindow = new MainWindow();
 		WindowSystem.AddWindow(_mainWindow);
@@ -32,7 +30,7 @@ public sealed class Plugin : IDalamudPlugin {
 	}
 
 	public static Configuration Configuration { get; private set; }
-
+	// ReSharper disable once UnusedAutoPropertyAccessor.Local
 	[PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; }
 	// ReSharper disable once UnusedAutoPropertyAccessor.Local
 	[PluginService] internal static IDataManager DataManager { get; private set; }
@@ -40,8 +38,8 @@ public sealed class Plugin : IDalamudPlugin {
 	[PluginService] internal static ITextureProvider TextureProvider { get; private set; }
 	// ReSharper disable once UnusedAutoPropertyAccessor.Local
 	[PluginService] internal static IPluginLog Log { get; private set; }
-	// ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
-	[PluginService] private ICommandManager CommandManager { get; set; }
+	// ReSharper disable once UnusedAutoPropertyAccessor.Local
+	[PluginService] internal static ICommandManager CommandManager { get; private set; }
 
 	public void Dispose() {
 		WindowSystem.RemoveAllWindows();
