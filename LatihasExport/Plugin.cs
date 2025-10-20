@@ -9,6 +9,7 @@ using Dalamud.Plugin.Services;
 namespace LatihasExport;
 
 public sealed class Plugin : IDalamudPlugin {
+    internal static AchievementService AchievementServiceInstance = null!;
     private readonly MainWindow _mainWindow;
     public readonly WindowSystem WindowSystem = new("LatihasExport");
 
@@ -27,19 +28,18 @@ public sealed class Plugin : IDalamudPlugin {
             Configuration.SavePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "LatihasExport");
             Configuration.Save();
         }
+        AchievementServiceInstance = new AchievementService();
+        Framework.Update += _ => AchievementServiceInstance.ProcNext();
     }
 
     public static Configuration Configuration { get; private set; }
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; }
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
     [PluginService] internal static IDataManager DataManager { get; private set; }
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; }
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
     [PluginService] internal static IPluginLog Log { get; private set; }
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
     [PluginService] internal static ICommandManager CommandManager { get; private set; }
+    [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
+    [PluginService] internal static IFramework Framework { get; } = null!;
 
     public void Dispose() {
         WindowSystem.RemoveAllWindows();

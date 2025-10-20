@@ -14,6 +14,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
+using static LatihasExport.Plugin;
 using Achievement = FFXIVClientStructs.FFXIV.Client.Game.UI.Achievement;
 using Action = System.Action;
 
@@ -43,7 +44,7 @@ public class MainWindow() : Window("LatihasExport") {
             Directory.CreateDirectory(_configuration.SavePath);
         }
         catch (Exception e) {
-            Plugin.Log.Error($"创建目录失败: {e.Message}");
+            Log.Error($"创建目录失败: {e.Message}");
         }
     }
 
@@ -53,7 +54,7 @@ public class MainWindow() : Window("LatihasExport") {
     }
 
     private static IEnumerable<T> Gl<T>(Func<T, bool> predicate) where T : struct, IExcelRow<T> =>
-        Plugin.DataManager.GameData.GetExcelSheet<T>()!.Where(predicate);
+        DataManager.GameData.GetExcelSheet<T>()!.Where(predicate);
 
 
     internal static unsafe void RefreshData() {
@@ -70,7 +71,7 @@ public class MainWindow() : Window("LatihasExport") {
             _lFishUnCaught = tmp.Where(i => !_playerStateInstance->IsFishCaught(i.RowId)).Select(res => new BUncaughtFish(
                 res.RowId.ToString(),
                 res.Item.RowId.ToString(),
-                Plugin.DataManager.GetExcelSheet<Item>(Plugin.DataManager.Language).GetRowOrDefault(res.Item.RowId)?.Name.ToString(),
+                DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)?.Name.ToString(),
                 res.FishingSpot.Value.PlaceName.Value.Name.ToString()
             )).ToArray();
             var tmp2 = Gl<SpearfishingItem>(i => i.IsVisible).ToArray();
@@ -78,7 +79,7 @@ public class MainWindow() : Window("LatihasExport") {
             _lsFishUnCaught = tmp2.Where(i => !_playerStateInstance->IsSpearfishCaught(i.RowId)).Select(res => new BUncaughtFish(
                 res.RowId.ToString(),
                 res.Item.RowId.ToString(),
-                Plugin.DataManager.GetExcelSheet<Item>(Plugin.DataManager.Language).GetRowOrDefault(res.Item.RowId)?.Name.ToString(),
+                DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)?.Name.ToString(),
                 ""
             )).ToArray();
             if (_achievementLoaded) _lAchievement = BAchievement.GetData();
@@ -121,7 +122,7 @@ public class MainWindow() : Window("LatihasExport") {
                 res.Singular.ToString())).ToArray();
         }
         catch (Exception e) {
-            Plugin.Log.Error(e.ToString());
+            Log.Error(e.ToString());
         }
     }
 
@@ -156,7 +157,7 @@ public class MainWindow() : Window("LatihasExport") {
     }
 
     private static void RenderIcon(int id) {
-        if (Plugin.TextureProvider.TryGetFromGameIcon((uint)id, out var tex) && tex.TryGetWrap(out var icon, out _))
+        if (TextureProvider.TryGetFromGameIcon((uint)id, out var tex) && tex.TryGetWrap(out var icon, out _))
             ImGui.Image(icon.Handle, new Vector2(24, 24));
     }
 
@@ -188,7 +189,7 @@ public class MainWindow() : Window("LatihasExport") {
                     foreach (var res in _lsFishCaught) sb.Append(res).Append(',');
                     sb.Remove(sb.Length - 1, 1).Append("]}");
                     WriteFile("fish.json", sb.ToString());
-                    Plugin.Log.Info("导完了");
+                    Log.Info("导完了");
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("打开鱼糕")) Start("https://fish.ffmomola.com/ng/#/wiki/fishing");
@@ -196,7 +197,16 @@ public class MainWindow() : Window("LatihasExport") {
                 NewTable(BUncaughtFish.Header, _lsFishUnCaught, BUncaughtFish.Acts);
             });
             NewTab("成就", () => {
-                if (_achievementLoaded) NewTable(BAchievement.Header, _lAchievement, BAchievement.Acts);
+                if (_achievementLoaded) {
+                    if (ImGui.Button("一键获取空数据(可能会卡死)"))
+                        foreach (var res in _lAchievement) {
+                            if (AchievementServiceInstance.Current.ContainsKey(res._rowId)) continue;
+                            AchievementServiceInstance.UpdateProgress(res._rowId);
+                        }
+                    ImGui.SameLine();
+                    if (ImGui.Button("重置队列(可清除卡死)")) AchievementServiceInstance.Reset();
+                    NewTable(BAchievement.Header, _lAchievement, BAchievement.Acts);
+                }
                 else ImGui.Text("打开一次成就界面以刷新");
             });
             NewTab("幻卡", () => {
@@ -208,7 +218,7 @@ public class MainWindow() : Window("LatihasExport") {
                     }
                     sb.Remove(sb.Length - 1, 1).Append(']');
                     WriteFile("ttc.json", sb.ToString());
-                    Plugin.Log.Info("导完了");
+                    Log.Info("导完了");
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("打开arrtripletriad.com")) Start("https://arrtripletriad.com/cn/huan-ka-yi-lan");
@@ -298,7 +308,7 @@ public class MainWindow() : Window("LatihasExport") {
         internal readonly string Name = name;
         private readonly string RowId = rowId;
 
-        internal static BRecipe[] GetData() => Plugin.DataManager.GameData.GetExcelSheet<Recipe>()!
+        internal static BRecipe[] GetData() => DataManager.GameData.GetExcelSheet<Recipe>()!
             .Select(x => new {
                 x,
                 a = x.RowId
@@ -313,7 +323,7 @@ public class MainWindow() : Window("LatihasExport") {
 
         internal static uint GetMaterial(string name) {
             try {
-                return Plugin.DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name).RowId;
+                return DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name).RowId;
             }
             catch (Exception) {
                 return 0;
@@ -322,7 +332,7 @@ public class MainWindow() : Window("LatihasExport") {
 
         internal static string? GetNonMaterial(string name) {
             try {
-                Plugin.DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name);
+                DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name);
                 return null;
             }
             catch (Exception) {
@@ -345,30 +355,36 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly string RowId = rowId;
     }
 
-    private class BAchievement(string rowId, int icon, string name, string points, string category) {
-        internal static readonly string[] Header = ["序号", "", "名称", "成就点", "分类"];
+    private class BAchievement(uint rowId, int icon, string name, string points, string category) {
+        internal static readonly string[] Header = ["序号", "", "名称", "成就点", "分类", "进度", "查询"];
         internal static readonly Action<BAchievement>[] Acts = [
             res => ImGui.Text(res.RowId),
             res => RenderIcon(res.Icon),
             res => ImGui.Text(res.Name),
             res => ImGui.Text(res.Points),
-            res => ImGui.Text(res.Category)
+            res => ImGui.Text(res.Category),
+            res => { ImGui.Text(!AchievementServiceInstance.Current.TryGetValue(res._rowId, out var x) ? "" : $"{x}/{AchievementServiceInstance.Max[res._rowId]}"); },
+            res => {
+                if (ImGui.Button($"查询:{res.Name}")) AchievementServiceInstance.UpdateProgress(res._rowId);
+            }
         ];
+        internal readonly uint _rowId = rowId;
         private readonly string Category = category;
         private readonly int Icon = icon;
         private readonly string Name = name;
         private readonly string Points = points;
-        private readonly string RowId = rowId;
+        private readonly string RowId = rowId.ToString();
 
         internal static unsafe BAchievement[] GetData() => Gl<Lumina.Excel.Sheets.Achievement>(i =>
             !_achievementInstance->IsComplete((int)i.RowId) && i.Name != "" && !i.AchievementHideCondition.Value.HideAchievement && i.AchievementCategory.Value.AchievementKind.Value.RowId is not (13 or 8 or 0)).Select(res => new BAchievement(
-            res.RowId.ToString(),
+            res.RowId,
             res.Icon,
             res.Name.ToString(),
             res.Points.ToString(),
             res.AchievementCategory.Value.Name.ToString()
         )).ToArray();
     }
+
 
     // public static string clipboard;
     // private static void Copy(string s) {
