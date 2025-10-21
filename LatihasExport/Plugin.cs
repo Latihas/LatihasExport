@@ -27,7 +27,7 @@ public sealed class Plugin : IDalamudPlugin {
         };
         CommandManager.AddHandler("/le", p);
         CommandManager.AddHandler("/latihasexport", p);
-        PluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
+        PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenMainUi += OnCommand;
         if (Configuration.SavePath == "") {
             Configuration.SavePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "LatihasExport");
@@ -37,7 +37,7 @@ public sealed class Plugin : IDalamudPlugin {
         Framework.Update += _ => AchievementServiceInstance.ProcNext();
     }
 
-    public static Configuration Configuration { get; private set; } = null!;
+    internal static Configuration Configuration { get; private set; } = null!;
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;

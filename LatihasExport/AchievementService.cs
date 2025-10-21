@@ -27,9 +27,9 @@ public unsafe class AchievementService : IDisposable {
         GC.SuppressFinalize(this);
     }
 
-    public void UpdateProgress(uint id) => _queue.Enqueue(id);
+    internal void UpdateProgress(uint id) => _queue.Enqueue(id);
 
-    public void Reset() {
+    internal void Reset() {
         _queue.Clear();
         isRunning = false;
     }

@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Text;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
@@ -65,7 +66,6 @@ public class MainWindow() : Window("LatihasExport") {
             _questManagerInstance = QuestManager.Instance();
             _achievementLoaded = _achievementInstance->IsLoaded();
             var UIStateInstance = UIState.Instance();
-
             _lRecipe = BRecipe.GetData();
             var tmp = Gl<FishParameter>(i => i.IsInLog && i.Text != "").ToArray();
             _lFishCaught = tmp.Where(i => _playerStateInstance->IsFishCaught(i.RowId)).Select(i => i.Item.RowId).ToArray();
@@ -96,7 +96,7 @@ public class MainWindow() : Window("LatihasExport") {
                 res.RowId.ToString(),
                 res.Name.ToString()
             )).ToArray();
-            _lMount = Gl<Mount>(i => !_playerStateInstance->IsMountUnlocked(i.RowId) && i.Icon != 0).Select(res => new BT3(
+            _lMount = Gl<Mount>(i => !_playerStateInstance->IsMountUnlocked(i.RowId) && i.Icon != 0 && !i.Singular.ToString().IsNullOrEmpty()).Select(res => new BT3(
                 res.RowId.ToString(),
                 res.Icon,
                 res.Singular.ToString())).ToArray();
@@ -108,7 +108,7 @@ public class MainWindow() : Window("LatihasExport") {
                 res.RowId.ToString(),
                 res.Icon,
                 res.Singular.ToString())).ToArray();
-            _lEmote = Gl<Emote>(i => !UIStateInstance->IsEmoteUnlocked((ushort)i.RowId) && i.Icon != 0).Select(res => new BT3(
+            _lEmote = Gl<Emote>(i => !UIStateInstance->IsEmoteUnlocked((ushort)i.RowId) && i.Icon != 0 && !i.Name.ToString().IsNullOrEmpty()).Select(res => new BT3(
                 res.RowId.ToString(),
                 res.Icon,
                 res.Name.ToString())).ToArray();
@@ -131,7 +131,17 @@ public class MainWindow() : Window("LatihasExport") {
         UseShellExecute = true
     });
 
-    private static void NewTable<T>(string[] header, T[] data, Action<T>[] acts) {
+    private static void ToCsv<T>(string[] header, T[] data, string csvName) {
+        csvName += ".csv";
+        if (ImGui.Button($"导出到 {csvName}")) {
+            var sb = new StringBuilder(string.Join(",", header)).Append('\n');
+            foreach (var p in data) sb.Append(p).Append('\n');
+            File.WriteAllText(Path.Combine(Plugin.Configuration.SavePath, csvName), sb.ToString(), Encoding.UTF8);
+        }
+    }
+
+    private static void NewTable<T>(string[] header, T[] data, Action<T>[] acts, string? csvName = null) {
+        if (csvName != null) ToCsv(header, data, csvName);
         if (ImGui.BeginTable("Table", acts.Length, ImGuiTableFlag)) {
             foreach (var item in header) {
                 if (item == "") ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 24);
@@ -162,7 +172,6 @@ public class MainWindow() : Window("LatihasExport") {
             ImGui.Image(icon.Handle, new Vector2(24, 24));
     }
 
-
     public override void Draw() {
         if (ImGui.InputText("保存路径", ref _configuration.SavePath, 114514)) _configuration.Save();
         ImGui.SameLine();
@@ -181,7 +190,8 @@ public class MainWindow() : Window("LatihasExport") {
                     sb.Append("]}");
                     ImGui.SetClipboardText(sb.ToString());
                 }
-                NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts);
+                ImGui.SameLine();
+                NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts, "制作笔记");
             });
             NewTab("钓鱼", () => {
                 if (ImGui.Button("导出到鱼糕")) {
@@ -194,6 +204,8 @@ public class MainWindow() : Window("LatihasExport") {
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("打开鱼糕")) Start("https://fish.ffmomola.com/ng/#/wiki/fishing");
+                ImGui.SameLine();
+                ToCsv(BUncaughtFish.Header, _lFishUnCaught.Concat(_lsFishUnCaught).ToArray(), "钓鱼");
                 NewTable(BUncaughtFish.Header, _lFishUnCaught, BUncaughtFish.Acts);
                 NewTable(BUncaughtFish.Header, _lsFishUnCaught, BUncaughtFish.Acts);
             });
@@ -206,7 +218,8 @@ public class MainWindow() : Window("LatihasExport") {
                         }
                     ImGui.SameLine();
                     if (ImGui.Button("重置队列(可清除卡死)")) AchievementServiceInstance.Reset();
-                    NewTable(BAchievement.Header, _lAchievement!, BAchievement.Acts);
+                    ImGui.SameLine();
+                    NewTable(BAchievement.Header, _lAchievement!, BAchievement.Acts, "成就");
                 }
                 else ImGui.Text("打开一次成就界面以刷新");
             });
@@ -223,7 +236,8 @@ public class MainWindow() : Window("LatihasExport") {
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("打开arrtripletriad.com")) Start("https://arrtripletriad.com/cn/huan-ka-yi-lan");
-                NewTable(BT2.Header, _lTripleTriadCard, BT2.Acts);
+                ImGui.SameLine();
+                NewTable(BT2.Header, _lTripleTriadCard, BT2.Acts, "幻卡");
             });
             NewTab("理符", () => {
                 if (ImGui.Button("导出已接受的可制作物品到Artisan")) {
@@ -251,19 +265,21 @@ public class MainWindow() : Window("LatihasExport") {
                             sb.Append($"{p},");
                     ImGui.SetClipboardText(sb.ToString());
                 }
+                ImGui.SameLine();
+                ToCsv(BLeve.Header, _lLeve, "理符");
                 ImGui.Text("已接受理符");
                 NewTable(BLeve.Header, _lLeveAccepted, BLeve.Acts);
                 ImGui.Text("所有理符");
                 NewTable(BLeve.Header, _lLeve, BLeve.Acts);
             });
-            NewTab("任务", () => NewTable(BQuest.Header, _lQuest, BQuest.Acts));
-            NewTab("乐谱", () => NewTable(BT2.Header, _lOrchestrion, BT2.Acts));
-            NewTab("坐骑", () => NewTable(BT3.Header, _lMount, BT3.Acts));
-            NewTab("装饰", () => NewTable(BT3.Header, _lOrnament, BT3.Acts));
-            NewTab("眼镜", () => NewTable(BT3.Header, _lGlasses, BT3.Acts));
-            NewTab("表情", () => NewTable(BT3.Header, _lEmote, BT3.Acts));
-            NewTab("教程", () => NewTable(BHowTo.Header, _lHowto, BHowTo.Acts));
-            NewTab("宠物", () => NewTable(BT3.Header, _lCompanion, BT3.Acts));
+            NewTab("任务", () => NewTable(BQuest.Header, _lQuest, BQuest.Acts, "任务"));
+            NewTab("乐谱", () => NewTable(BT2.Header, _lOrchestrion, BT2.Acts, "乐谱"));
+            NewTab("坐骑", () => NewTable(BT3.Header, _lMount, BT3.Acts, "坐骑"));
+            NewTab("装饰", () => NewTable(BT3.Header, _lOrnament, BT3.Acts, "装饰"));
+            NewTab("眼镜", () => NewTable(BT3.Header, _lGlasses, BT3.Acts, "眼镜"));
+            NewTab("表情", () => NewTable(BT3.Header, _lEmote, BT3.Acts, "表情"));
+            NewTab("教程", () => NewTable(BHowTo.Header, _lHowto, BHowTo.Acts, "教程"));
+            NewTab("宠物", () => NewTable(BT3.Header, _lCompanion, BT3.Acts, "宠物"));
             // NewTab("陆行鸟车", () => {
             // 	unsafe {
             // 		NewTable(["序号", "名称"], Gl<ChocoboTaxiStand>(i =>
@@ -304,9 +320,12 @@ public class MainWindow() : Window("LatihasExport") {
             res => RenderIcon(res.Icon),
             res => ImGui.Text(res.Name)
         ];
+
         private readonly int Icon = icon;
         internal readonly string Name = name;
         private readonly string RowId = rowId;
+
+        public override string ToString() => $"{RowId},,{Name}";
 
         internal static BRecipe[] GetData() => DataManager.GameData.GetExcelSheet<Recipe>()!
             .Select(x => new {
@@ -353,6 +372,7 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly string Name = name;
         private readonly string Place = place;
         private readonly string RowId = rowId;
+        public override string ToString() => $"{RowId},{ItemId},{Name},{Place}";
     }
 
     private class BAchievement(uint rowId, int icon, string name, string points, string category) {
@@ -363,7 +383,7 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.Name),
             res => ImGui.Text(res.Points),
             res => ImGui.Text(res.Category),
-            res => { ImGui.Text(!AchievementServiceInstance.Current.TryGetValue(res._rowId, out var x) ? "" : $"{x}/{AchievementServiceInstance.Max[res._rowId]}"); },
+            res => ImGui.Text(GetProcess(res)),
             res => {
                 if (ImGui.Button($"查询:{res.Name}")) AchievementServiceInstance.UpdateProgress(res._rowId);
             }
@@ -374,6 +394,8 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly string Name = name;
         private readonly string Points = points;
         private readonly string RowId = rowId.ToString();
+        private static string GetProcess(BAchievement res) => !AchievementServiceInstance.Current.TryGetValue(res._rowId, out var x) ? "" : $"{x}/{AchievementServiceInstance.Max[res._rowId]}";
+        public override string ToString() => $"{RowId},,{Name},{Points},{Category},{GetProcess(this)},";
 
         internal static unsafe BAchievement[] GetData() => Gl<Lumina.Excel.Sheets.Achievement>(i =>
             !_achievementInstance->IsComplete((int)i.RowId) && i.Name != "" && !i.AchievementHideCondition.Value.HideAchievement && i.AchievementCategory.Value.AchievementKind.Value.RowId is not (13 or 8 or 0)).Select(res => new BAchievement(
@@ -385,12 +407,6 @@ public class MainWindow() : Window("LatihasExport") {
         )).ToArray();
     }
 
-
-    // public static string clipboard;
-    // private static void Copy(string s) {
-    //     clipboard = s;
-    //     ImGui.SetClipboardText(clipboard);
-    // }
     private class BLeve(uint rowId, string job, string lv, string name, string startzone, string startplace, string npc, string itemName, string itemCount) {
         internal static readonly string[] Header = ["序号", "职业", "等级", "名称", "开始区域", "开始地点", "NPC", "提交道具", "道具数量"];
         internal static readonly Action<BLeve>[] Acts = [
@@ -420,6 +436,7 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly string RowId = rowId.ToString();
         private readonly string StartPlace = startplace;
         private readonly string StartZone = startzone;
+        public override string ToString() => $"{RowId},{Job},{Lv},{Name},{StartZone},{StartPlace},{Npc},{ItemName},{ItemCount}";
 
         internal static unsafe BLeve[] GetData() {
             var lLevex = Gl<Leve>(i => !_questManagerInstance->IsLevequestComplete((ushort)i.RowId) && i.AllowanceCost != 0 && i is { RowId: > 0, GilReward: > 0 }).ToArray();
@@ -459,6 +476,7 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly string Category = category;
         private readonly string Name = name;
         private readonly string RowId = rowId;
+        public override string ToString() => $"{RowId},{Category},{Name}";
     }
 
     private class BT2(string rowId, string name) {
@@ -469,6 +487,7 @@ public class MainWindow() : Window("LatihasExport") {
         ];
         private readonly string Name = name;
         private readonly string RowId = rowId;
+        public override string ToString() => $"{RowId},{Name}";
     }
 
     private class BT3(string rowId, int icon, string name) {
@@ -481,6 +500,7 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly int Icon = icon;
         private readonly string Name = name;
         private readonly string RowId = rowId;
+        public override string ToString() => $"{RowId},,{Name}";
     }
 
     private class BQuest(string rowId, string lv, int icon, string name, string place, string category1, string category2, string category3) {
@@ -503,6 +523,7 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly string Name = name;
         private readonly string Place = place;
         private readonly string RowId = rowId;
+        public override string ToString() => $"{RowId},{Lv},,{Name},{Place},{Category1},{Category2},{Category3}";
 
         internal static unsafe BQuest[] GetData() =>
             Gl<Quest>(i => !UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted((ushort)i.RowId + 0x10000u) && i.PlaceName.Value.Name != "" && i.JournalGenre.RowId > 0 && i.JournalGenre.Value.JournalCategory.Value.RowId != 96).Select(res => new BQuest(
