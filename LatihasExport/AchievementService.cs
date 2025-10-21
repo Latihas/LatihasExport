@@ -7,14 +7,14 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 namespace LatihasExport;
 
 public unsafe class AchievementService : IDisposable {
-    internal readonly Queue<uint> _queue = new();
+    private readonly Queue<uint> _queue = new();
     internal readonly Dictionary<uint, uint> Current = new();
     internal readonly Dictionary<uint, uint> Max = new();
 
     [Signature("C7 81 ?? ?? ?? ?? ?? ?? ?? ?? 89 91 ?? ?? ?? ?? 44 89 81", DetourName = nameof(ReceiveAchievementProgress))]
     private readonly Hook<ReceiveAchievementProgressDelegate>? receiveAchievementProgressDelegate = null!;
     private uint ForTheHoardAchievementId;
-    internal bool isRunning;
+    private bool isRunning;
 
     internal AchievementService() {
         Plugin.GameInteropProvider.InitializeFromAttributes(this);
@@ -22,12 +22,12 @@ public unsafe class AchievementService : IDisposable {
     }
 
     public void Dispose() {
+        receiveAchievementProgressDelegate?.Disable();
         receiveAchievementProgressDelegate?.Dispose();
+        GC.SuppressFinalize(this);
     }
 
-    public void UpdateProgress(uint id) {
-        _queue.Enqueue(id);
-    }
+    public void UpdateProgress(uint id) => _queue.Enqueue(id);
 
     public void Reset() {
         _queue.Clear();
@@ -42,12 +42,13 @@ public unsafe class AchievementService : IDisposable {
     }
 
     private void ReceiveAchievementProgress(Achievement* self, uint id, uint current, uint max) {
-        if (ForTheHoardAchievementId != id) return;
-        Current[ForTheHoardAchievementId] = current;
-        Max[ForTheHoardAchievementId] = max;
+        if (ForTheHoardAchievementId == id) {
+            Current[ForTheHoardAchievementId] = current;
+            Max[ForTheHoardAchievementId] = max;
+            _queue.Dequeue();
+            isRunning = false;
+        }
         receiveAchievementProgressDelegate!.Original(self, id, current, max);
-        _queue.Dequeue();
-        isRunning = false;
     }
 
     private delegate void ReceiveAchievementProgressDelegate(Achievement* self, uint id, uint current, uint max);

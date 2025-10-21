@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
@@ -8,9 +9,13 @@ using Dalamud.Plugin.Services;
 
 namespace LatihasExport;
 
+[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+[SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Local")]
+[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
 public sealed class Plugin : IDalamudPlugin {
     internal static AchievementService AchievementServiceInstance = null!;
     private readonly MainWindow _mainWindow;
+    // ReSharper disable once MemberCanBePrivate.Global
     public readonly WindowSystem WindowSystem = new("LatihasExport");
 
     public Plugin() {
@@ -23,7 +28,7 @@ public sealed class Plugin : IDalamudPlugin {
         CommandManager.AddHandler("/le", p);
         CommandManager.AddHandler("/latihasexport", p);
         PluginInterface.UiBuilder.Draw += () => WindowSystem.Draw();
-        PluginInterface.UiBuilder.OpenMainUi += () => OnCommand(null, null);
+        PluginInterface.UiBuilder.OpenMainUi += OnCommand;
         if (Configuration.SavePath == "") {
             Configuration.SavePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "LatihasExport");
             Configuration.Save();
@@ -32,22 +37,25 @@ public sealed class Plugin : IDalamudPlugin {
         Framework.Update += _ => AchievementServiceInstance.ProcNext();
     }
 
-    public static Configuration Configuration { get; private set; }
-    [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; }
-    [PluginService] internal static IDataManager DataManager { get; private set; }
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; }
-    [PluginService] internal static IPluginLog Log { get; private set; }
-    [PluginService] internal static ICommandManager CommandManager { get; private set; }
+    public static Configuration Configuration { get; private set; } = null!;
+    [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
+    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
+    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+    [PluginService] private static ICommandManager CommandManager { get; set; } = null!;
     [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
-    [PluginService] internal static IFramework Framework { get; } = null!;
+    [PluginService] private static IFramework Framework { get; set; } = null!;
 
     public void Dispose() {
         WindowSystem.RemoveAllWindows();
         CommandManager.RemoveHandler("/le");
         CommandManager.RemoveHandler("/latihasexport");
+        AchievementServiceInstance.Dispose();
     }
 
-    private void OnCommand(string command, string args) {
+    private void OnCommand(string command, string args) => OnCommand();
+
+    private void OnCommand() {
         MainWindow.RefreshData();
         _mainWindow.Toggle();
     }

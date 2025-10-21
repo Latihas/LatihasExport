@@ -21,6 +21,7 @@ using Action = System.Action;
 namespace LatihasExport;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
+[SuppressMessage("ReSharper", "InvertIf")]
 public class MainWindow() : Window("LatihasExport") {
     private const ImGuiTableFlags ImGuiTableFlag = ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.RowBg;
 
@@ -71,7 +72,7 @@ public class MainWindow() : Window("LatihasExport") {
             _lFishUnCaught = tmp.Where(i => !_playerStateInstance->IsFishCaught(i.RowId)).Select(res => new BUncaughtFish(
                 res.RowId.ToString(),
                 res.Item.RowId.ToString(),
-                DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)?.Name.ToString(),
+                DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)!.Value.Name.ToString(),
                 res.FishingSpot.Value.PlaceName.Value.Name.ToString()
             )).ToArray();
             var tmp2 = Gl<SpearfishingItem>(i => i.IsVisible).ToArray();
@@ -79,7 +80,7 @@ public class MainWindow() : Window("LatihasExport") {
             _lsFishUnCaught = tmp2.Where(i => !_playerStateInstance->IsSpearfishCaught(i.RowId)).Select(res => new BUncaughtFish(
                 res.RowId.ToString(),
                 res.Item.RowId.ToString(),
-                DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)?.Name.ToString(),
+                DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)!.Value.Name.ToString(),
                 ""
             )).ToArray();
             if (_achievementLoaded) _lAchievement = BAchievement.GetData();
@@ -199,13 +200,13 @@ public class MainWindow() : Window("LatihasExport") {
             NewTab("成就", () => {
                 if (_achievementLoaded) {
                     if (ImGui.Button("一键获取空数据(可能会卡死)"))
-                        foreach (var res in _lAchievement) {
+                        foreach (var res in _lAchievement!) {
                             if (AchievementServiceInstance.Current.ContainsKey(res._rowId)) continue;
                             AchievementServiceInstance.UpdateProgress(res._rowId);
                         }
                     ImGui.SameLine();
                     if (ImGui.Button("重置队列(可清除卡死)")) AchievementServiceInstance.Reset();
-                    NewTable(BAchievement.Header, _lAchievement, BAchievement.Acts);
+                    NewTable(BAchievement.Header, _lAchievement!, BAchievement.Acts);
                 }
                 else ImGui.Text("打开一次成就界面以刷新");
             });
@@ -293,7 +294,6 @@ public class MainWindow() : Window("LatihasExport") {
             ImGui.EndTabBar();
         }
     }
-    // ReSharper disable once UnusedAutoPropertyAccessor.Local
 
     #region Beans
 
@@ -332,7 +332,7 @@ public class MainWindow() : Window("LatihasExport") {
 
         internal static string? GetNonMaterial(string name) {
             try {
-                DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name);
+                _ = DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name);
                 return null;
             }
             catch (Exception) {
