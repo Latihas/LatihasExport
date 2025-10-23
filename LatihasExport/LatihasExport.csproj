@@ -1,48 +1,48 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<Configuration>Release</Configuration>
-		<AssemblyName>LatihasExport</AssemblyName>
-		<TargetFramework>net9.0-windows</TargetFramework>
-		<PlatformTarget>x64</PlatformTarget>
-		<Optimize>true</Optimize>
-		<OutputPath>bin</OutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<DebugSymbols>false</DebugSymbols>
-		<Nullable>enable</Nullable>
-		<DebugType>none</DebugType>
-		<NoWarn>CA1816</NoWarn>
-	</PropertyGroup>
-	<PropertyGroup>
-		<LangVersion>Latest</LangVersion>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<XIVLauncherPath>$(userprofile)\AppData\Roaming\XIVLauncherCN</XIVLauncherPath>
-		<DalamudPath>$(XIVLauncherPath)\addon\Hooks\dev</DalamudPath>
-		<NoWarn>CA1416;</NoWarn>
-	</PropertyGroup>
-	<ItemGroup>
-		<Reference Include="Lumina">
-			<HintPath>$(DalamudPath)\Lumina.dll</HintPath>
-		</Reference>
-		<Reference Include="Lumina.Excel">
-			<HintPath>$(DalamudPath)\Lumina.Excel.dll</HintPath>
-		</Reference>
-		<Reference Include="Dalamud">
-			<HintPath>$(DalamudPath)\Dalamud.dll</HintPath>
-		</Reference>
-		<Reference Include="FFXIVClientStructs">
-			<HintPath>$(DalamudPath)\FFXIVClientStructs.dll</HintPath>
-		</Reference>
-		<Reference Include="ImGui.NET">
-			<HintPath>$(DalamudPath)\Dalamud.Bindings.ImGui.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup>
-		<Content Include="LatihasExport.json" CopyToOutputDirectory="PreserveNewest"/>
-	</ItemGroup>
-	<Target Name="DeleteFiles" AfterTargets="Build">
-		<ItemGroup>
-			<FilesToDelete Include="$(OutputPath)/*" Exclude="$(OutputPath)/LatihasExport*"/>
-		</ItemGroup>
-		<Delete Files="@(FilesToDelete)"/>
-	</Target>
+  <PropertyGroup>
+    <Configuration>Release</Configuration>
+    <AssemblyName>LatihasExport</AssemblyName>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <Optimize>true</Optimize>
+    <OutputPath>bin</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <Nullable>enable</Nullable>
+    <DebugType>none</DebugType>
+    <NoWarn>CA1816</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>Latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <XIVLauncherPath>$(userprofile)\AppData\Roaming\XIVLauncherCN</XIVLauncherPath>
+    <DalamudPath>$(XIVLauncherPath)\addon\Hooks\dev</DalamudPath>
+    <NoWarn>CA1416;</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Lumina">
+      <HintPath>$(DalamudPath)\Lumina.dll</HintPath>
+    </Reference>
+    <Reference Include="Lumina.Excel">
+      <HintPath>$(DalamudPath)\Lumina.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="Dalamud">
+      <HintPath>$(DalamudPath)\Dalamud.dll</HintPath>
+    </Reference>
+    <Reference Include="FFXIVClientStructs">
+      <HintPath>$(DalamudPath)\FFXIVClientStructs.dll</HintPath>
+    </Reference>
+    <Reference Include="ImGui.NET">
+      <HintPath>$(DalamudPath)\Dalamud.Bindings.ImGui.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LatihasExport.json" CopyToOutputDirectory="PreserveNewest"/>
+  </ItemGroup>
+  <Target Name="DeleteFiles" AfterTargets="Build">
+    <ItemGroup>
+      <FilesToDelete Include="$(OutputPath)/*" Exclude="$(OutputPath)/LatihasExport*"/>
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)"/>
+  </Target>
 </Project>

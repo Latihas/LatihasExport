@@ -140,16 +140,32 @@ public class MainWindow() : Window("LatihasExport") {
         }
     }
 
-    private static void NewTable<T>(string[] header, T[] data, Action<T>[] acts, string? csvName = null) {
+    private static void NewTable<T>(string[] header, T[] data, Action<T>[] acts, string? csvName = null, Func<T, string>[]? filter = null, string? filterTag = null) {
         if (csvName != null) ToCsv(header, data, csvName);
+        var datax = (data.Clone() as T[])!;
         if (ImGui.BeginTable("Table", acts.Length, ImGuiTableFlag)) {
             foreach (var item in header) {
                 if (item == "") ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 24);
                 else if (item.Contains("序号")) ImGui.TableSetupColumn(item, ImGuiTableColumnFlags.WidthFixed, 96);
-                else ImGui.TableSetupColumn(item);
+                else ImGui.TableSetupColumn(item, ImGuiTableColumnFlags.WidthStretch);
             }
             ImGui.TableHeadersRow();
-            foreach (var res in data) {
+            if (filter != null && filterTag != null) {
+                var filterdata = new string[acts.Length];
+                for (var i = 0; i < filterdata.Length; i++) filterdata[i] = "";
+                ImGui.TableNextRow();
+                for (var i = 0; i < acts.Length; i++) {
+                    ImGui.TableSetColumnIndex(i);
+                    if (header[i].IsNullOrEmpty()) continue;
+                    if (ImGui.InputText($"##Filter{i}", ref filterdata[i])) {
+                        for (var j = 0; j < acts.Length; j++) {
+                            if (header[j].IsNullOrEmpty()) continue;
+                            datax = datax.Where(x => filter[j](x).Contains(filterdata[j])).ToArray();
+                        }
+                    }
+                }
+            }
+            foreach (var res in datax) {
                 ImGui.TableNextRow();
                 for (var i = 0; i < acts.Length; i++) {
                     ImGui.TableSetColumnIndex(i);
@@ -191,7 +207,7 @@ public class MainWindow() : Window("LatihasExport") {
                     ImGui.SetClipboardText(sb.ToString());
                 }
                 ImGui.SameLine();
-                NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts, "制作笔记");
+                NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts, "制作笔记", BRecipe.Filters, "_lRecipe");
             });
             NewTab("钓鱼", () => {
                 if (ImGui.Button("导出到鱼糕")) {
@@ -206,8 +222,8 @@ public class MainWindow() : Window("LatihasExport") {
                 if (ImGui.Button("打开鱼糕")) Start("https://fish.ffmomola.com/ng/#/wiki/fishing");
                 ImGui.SameLine();
                 ToCsv(BUncaughtFish.Header, _lFishUnCaught.Concat(_lsFishUnCaught).ToArray(), "钓鱼");
-                NewTable(BUncaughtFish.Header, _lFishUnCaught, BUncaughtFish.Acts);
-                NewTable(BUncaughtFish.Header, _lsFishUnCaught, BUncaughtFish.Acts);
+                NewTable(BUncaughtFish.Header, _lFishUnCaught, BUncaughtFish.Acts, filter: BUncaughtFish.Filters, filterTag: "_lFishUnCaught");
+                NewTable(BUncaughtFish.Header, _lsFishUnCaught, BUncaughtFish.Acts, filter: BUncaughtFish.Filters, filterTag: "_lsFishUnCaught");
             });
             NewTab("成就", () => {
                 if (_achievementLoaded) {
@@ -219,7 +235,7 @@ public class MainWindow() : Window("LatihasExport") {
                     ImGui.SameLine();
                     if (ImGui.Button("重置队列(可清除卡死)")) AchievementServiceInstance.Reset();
                     ImGui.SameLine();
-                    NewTable(BAchievement.Header, _lAchievement!, BAchievement.Acts, "成就");
+                    NewTable(BAchievement.Header, _lAchievement!, BAchievement.Acts, "成就", BAchievement.Filters, "_lAchievement");
                 }
                 else ImGui.Text("打开一次成就界面以刷新");
             });
@@ -237,7 +253,7 @@ public class MainWindow() : Window("LatihasExport") {
                 ImGui.SameLine();
                 if (ImGui.Button("打开arrtripletriad.com")) Start("https://arrtripletriad.com/cn/huan-ka-yi-lan");
                 ImGui.SameLine();
-                NewTable(BT2.Header, _lTripleTriadCard, BT2.Acts, "幻卡");
+                NewTable(BT2.Header, _lTripleTriadCard, BT2.Acts, "幻卡", BT2.Filters, "_lTripleTriadCard");
             });
             NewTab("理符", () => {
                 if (ImGui.Button("导出已接受的可制作物品到Artisan")) {
@@ -268,18 +284,18 @@ public class MainWindow() : Window("LatihasExport") {
                 ImGui.SameLine();
                 ToCsv(BLeve.Header, _lLeve, "理符");
                 ImGui.Text("已接受理符");
-                NewTable(BLeve.Header, _lLeveAccepted, BLeve.Acts);
+                NewTable(BLeve.Header, _lLeveAccepted, BLeve.Acts, filter: BLeve.Filters, filterTag: "_lLeveAccepted");
                 ImGui.Text("所有理符");
-                NewTable(BLeve.Header, _lLeve, BLeve.Acts);
+                NewTable(BLeve.Header, _lLeve, BLeve.Acts, filter: BLeve.Filters, filterTag: "_lLeve");
             });
-            NewTab("任务", () => NewTable(BQuest.Header, _lQuest, BQuest.Acts, "任务"));
-            NewTab("乐谱", () => NewTable(BT2.Header, _lOrchestrion, BT2.Acts, "乐谱"));
-            NewTab("坐骑", () => NewTable(BT3.Header, _lMount, BT3.Acts, "坐骑"));
-            NewTab("装饰", () => NewTable(BT3.Header, _lOrnament, BT3.Acts, "装饰"));
-            NewTab("眼镜", () => NewTable(BT3.Header, _lGlasses, BT3.Acts, "眼镜"));
-            NewTab("表情", () => NewTable(BT3.Header, _lEmote, BT3.Acts, "表情"));
-            NewTab("教程", () => NewTable(BHowTo.Header, _lHowto, BHowTo.Acts, "教程"));
-            NewTab("宠物", () => NewTable(BT3.Header, _lCompanion, BT3.Acts, "宠物"));
+            NewTab("任务", () => NewTable(BQuest.Header, _lQuest, BQuest.Acts, "任务", BQuest.Filters, "_lQuest"));
+            NewTab("乐谱", () => NewTable(BT2.Header, _lOrchestrion, BT2.Acts, "乐谱", BT2.Filters, "_lOrchestrion"));
+            NewTab("坐骑", () => NewTable(BT3.Header, _lMount, BT3.Acts, "坐骑", BT3.Filters, "_lMount"));
+            NewTab("装饰", () => NewTable(BT3.Header, _lOrnament, BT3.Acts, "装饰", BT3.Filters, "_lOrnament"));
+            NewTab("眼镜", () => NewTable(BT3.Header, _lGlasses, BT3.Acts, "眼镜", BT3.Filters, "_lGlasses"));
+            NewTab("表情", () => NewTable(BT3.Header, _lEmote, BT3.Acts, "表情", BT3.Filters, "_lEmote"));
+            NewTab("教程", () => NewTable(BHowTo.Header, _lHowto, BHowTo.Acts, "教程", BHowTo.Filters, "_lHowto"));
+            NewTab("宠物", () => NewTable(BT3.Header, _lCompanion, BT3.Acts, "宠物", BT3.Filters, "_lCompanion"));
             // NewTab("陆行鸟车", () => {
             // 	unsafe {
             // 		NewTable(["序号", "名称"], Gl<ChocoboTaxiStand>(i =>
@@ -320,7 +336,11 @@ public class MainWindow() : Window("LatihasExport") {
             res => RenderIcon(res.Icon),
             res => ImGui.Text(res.Name)
         ];
-
+        internal static readonly Func<BRecipe, string>[] Filters = [
+            res => res.RowId,
+            _ => "",
+            res => res.Name
+        ];
         private readonly int Icon = icon;
         internal readonly string Name = name;
         private readonly string RowId = rowId;
@@ -368,6 +388,12 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.Name),
             res => ImGui.Text(res.Place)
         ];
+        internal static readonly Func<BUncaughtFish, string>[] Filters = [
+            res => res.RowId,
+            res => res.ItemId,
+            res => res.Name,
+            res => res.Place
+        ];
         private readonly string ItemId = itemId;
         private readonly string Name = name;
         private readonly string Place = place;
@@ -387,6 +413,15 @@ public class MainWindow() : Window("LatihasExport") {
             res => {
                 if (ImGui.Button($"查询:{res.Name}")) AchievementServiceInstance.UpdateProgress(res._rowId);
             }
+        ];
+        internal static readonly Func<BAchievement, string>[] Filters = [
+            res => res.RowId,
+            _ => "",
+            res => res.Name,
+            res => res.Points,
+            res => res.Category,
+            _ => "",
+            _ => ""
         ];
         internal readonly uint _rowId = rowId;
         private readonly string Category = category;
@@ -425,6 +460,17 @@ public class MainWindow() : Window("LatihasExport") {
                 if (ImGui.Button(res.ItemName)) ImGui.SetClipboardText(res.ItemName);
             },
             res => ImGui.Text(res.ItemCount)
+        ];
+        internal static readonly Func<BLeve, string>[] Filters = [
+            res => res.RowId,
+            res => res.Job,
+            res => res.Lv,
+            res => res.Name,
+            res => res.StartZone,
+            res => res.StartPlace,
+            res => res.Npc,
+            res => res.ItemName,
+            res => res.ItemCount
         ];
         internal readonly uint _rowId = rowId;
         private readonly string ItemCount = itemCount;
@@ -473,6 +519,11 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.Category),
             res => ImGui.Text(res.Name)
         ];
+        internal static readonly Func<BHowTo, string>[] Filters = [
+            res => res.RowId,
+            res => res.Category,
+            res => res.Name
+        ];
         private readonly string Category = category;
         private readonly string Name = name;
         private readonly string RowId = rowId;
@@ -485,6 +536,10 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.RowId),
             res => ImGui.Text(res.Name)
         ];
+        internal static readonly Func<BT2, string>[] Filters = [
+            res => res.RowId,
+            res => res.Name
+        ];
         private readonly string Name = name;
         private readonly string RowId = rowId;
         public override string ToString() => $"{RowId},{Name}";
@@ -496,6 +551,11 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.RowId),
             res => RenderIcon(res.Icon),
             res => ImGui.Text(res.Name)
+        ];
+        internal static readonly Func<BT3, string>[] Filters = [
+            res => res.RowId,
+            _ => "",
+            res => res.Name
         ];
         private readonly int Icon = icon;
         private readonly string Name = name;
@@ -514,6 +574,16 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.Category1),
             res => ImGui.Text(res.Category2),
             res => ImGui.Text(res.Category3)
+        ];
+        internal static readonly Func<BQuest, string>[] Filters = [
+            res => res.RowId,
+            res => res.Lv,
+            _ => "",
+            res => res.Name,
+            res => res.Place,
+            res => res.Category1,
+            res => res.Category2,
+            res => res.Category3
         ];
         private readonly string Category1 = category1;
         private readonly string Category2 = category2;
