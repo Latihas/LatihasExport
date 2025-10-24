@@ -26,7 +26,6 @@ namespace LatihasExport;
 [SuppressMessage("ReSharper", "InvertIf")]
 public class MainWindow() : Window("LatihasExport") {
     private const ImGuiTableFlags ImGuiTableFlag = ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.RowBg;
-
     private static BRecipe[] _lRecipe = null!;
     private static uint[] _lFishCaught = null!, _lsFishCaught = null!;
     private static BUncaughtFish[] _lFishUnCaught = null!, _lsFishUnCaught = null!;
