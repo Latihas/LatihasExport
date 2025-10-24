@@ -38,6 +38,8 @@ public sealed class Plugin : IDalamudPlugin {
     }
 
     internal static Configuration Configuration { get; private set; } = null!;
+
+    [PluginService] public static INotificationManager NotificationManager { get; private set; } = null!;
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;

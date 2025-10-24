@@ -8,6 +8,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -155,8 +156,9 @@ public class MainWindow() : Window("LatihasExport") {
                 for (var i = 0; i < filterdata.Length; i++) filterdata[i] = "";
                 ImGui.TableNextRow();
                 for (var i = 0; i < acts.Length; i++) {
-                    ImGui.TableSetColumnIndex(i);
                     if (header[i].IsNullOrEmpty()) continue;
+                    ImGui.TableSetColumnIndex(i);
+                    ImGui.SetNextItemWidth(-1);
                     if (ImGui.InputText($"##Filter{i}", ref filterdata[i])) {
                         for (var j = 0; j < acts.Length; j++) {
                             if (header[j].IsNullOrEmpty()) continue;
@@ -204,7 +206,12 @@ public class MainWindow() : Window("LatihasExport") {
                         if (p != 0)
                             sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
                     sb.Append("]}");
-                    ImGui.SetClipboardText(sb.ToString());
+                    var s = sb.ToString();
+                    ImGui.SetClipboardText(s);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = s
+                    });
                 }
                 ImGui.SameLine();
                 NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts, "制作笔记", BRecipe.Filters, "_lRecipe");
@@ -262,7 +269,12 @@ public class MainWindow() : Window("LatihasExport") {
                         if (p != 0)
                             sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
                     sb.Append("]}");
-                    ImGui.SetClipboardText(sb.ToString());
+                    var s = sb.ToString();
+                    ImGui.SetClipboardText(s);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = s
+                    });
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("导出所有的可制作物品到Artisan")) {
@@ -271,7 +283,12 @@ public class MainWindow() : Window("LatihasExport") {
                         if (p != 0)
                             sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
                     sb.Append("]}");
-                    ImGui.SetClipboardText(sb.ToString());
+                    var s = sb.ToString();
+                    ImGui.SetClipboardText(s);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = s
+                    });
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("导出所有的不可制作物品")) {
@@ -279,7 +296,12 @@ public class MainWindow() : Window("LatihasExport") {
                     foreach (var p in _lLeve.Select(acc => BRecipe.GetNonMaterial(acc.ItemName)))
                         if (p is not null)
                             sb.Append($"{p},");
-                    ImGui.SetClipboardText(sb.ToString());
+                    var s = sb.ToString();
+                    ImGui.SetClipboardText(s);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = s
+                    });
                 }
                 ImGui.SameLine();
                 ToCsv(BLeve.Header, _lLeve, "理符");
@@ -334,7 +356,15 @@ public class MainWindow() : Window("LatihasExport") {
         internal static readonly Action<BRecipe>[] Acts = [
             res => ImGui.Text(res.RowId),
             res => RenderIcon(res.Icon),
-            res => ImGui.Text(res.Name)
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            }
         ];
         internal static readonly Func<BRecipe, string>[] Filters = [
             res => res.RowId,
@@ -385,7 +415,15 @@ public class MainWindow() : Window("LatihasExport") {
         internal static readonly Action<BUncaughtFish>[] Acts = [
             res => ImGui.Text(res.RowId),
             res => ImGui.Text(res.ItemId),
-            res => ImGui.Text(res.Name),
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            },
             res => ImGui.Text(res.Place)
         ];
         internal static readonly Func<BUncaughtFish, string>[] Filters = [
@@ -406,7 +444,15 @@ public class MainWindow() : Window("LatihasExport") {
         internal static readonly Action<BAchievement>[] Acts = [
             res => ImGui.Text(res.RowId),
             res => RenderIcon(res.Icon),
-            res => ImGui.Text(res.Name),
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            },
             res => ImGui.Text(res.Points),
             res => ImGui.Text(res.Category),
             res => ImGui.Text(GetProcess(res)),
@@ -448,7 +494,15 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.RowId),
             res => ImGui.Text(res.Job),
             res => ImGui.Text(res.Lv),
-            res => ImGui.Text(res.Name),
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            },
             res => ImGui.Text(res.StartZone),
             res => ImGui.Text(res.StartPlace),
             res => ImGui.Text(res.Npc),
@@ -457,7 +511,13 @@ public class MainWindow() : Window("LatihasExport") {
                     ImGui.Text("");
                     return;
                 }
-                if (ImGui.Button(res.ItemName)) ImGui.SetClipboardText(res.ItemName);
+                if (ImGui.Button(res.ItemName)) {
+                    ImGui.SetClipboardText(res.ItemName);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.ItemName
+                    });
+                }
             },
             res => ImGui.Text(res.ItemCount)
         ];
@@ -517,7 +577,15 @@ public class MainWindow() : Window("LatihasExport") {
         internal static readonly Action<BHowTo>[] Acts = [
             res => ImGui.Text(res.RowId),
             res => ImGui.Text(res.Category),
-            res => ImGui.Text(res.Name)
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            }
         ];
         internal static readonly Func<BHowTo, string>[] Filters = [
             res => res.RowId,
@@ -534,7 +602,15 @@ public class MainWindow() : Window("LatihasExport") {
         internal static readonly string[] Header = ["序号", "名称"];
         internal static readonly Action<BT2>[] Acts = [
             res => ImGui.Text(res.RowId),
-            res => ImGui.Text(res.Name)
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            }
         ];
         internal static readonly Func<BT2, string>[] Filters = [
             res => res.RowId,
@@ -550,7 +626,15 @@ public class MainWindow() : Window("LatihasExport") {
         internal static readonly Action<BT3>[] Acts = [
             res => ImGui.Text(res.RowId),
             res => RenderIcon(res.Icon),
-            res => ImGui.Text(res.Name)
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            }
         ];
         internal static readonly Func<BT3, string>[] Filters = [
             res => res.RowId,
@@ -569,7 +653,15 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(res.RowId),
             res => ImGui.Text(res.Lv),
             res => RenderIcon(res.Icon),
-            res => ImGui.Text(res.Name),
+            res => {
+                if (ImGui.Button(res.Name)) {
+                    ImGui.SetClipboardText(res.Name);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制",
+                        Content = res.Name
+                    });
+                }
+            },
             res => ImGui.Text(res.Place),
             res => ImGui.Text(res.Category1),
             res => ImGui.Text(res.Category2),
