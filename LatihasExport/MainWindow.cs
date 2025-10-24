@@ -38,7 +38,6 @@ public class MainWindow() : Window("LatihasExport") {
     private static unsafe PlayerState* _playerStateInstance;
     private static unsafe Achievement* _achievementInstance;
     private static unsafe QuestManager* _questManagerInstance;
-    private static bool _achievementLoaded;
     private readonly Configuration _configuration = Plugin.Configuration;
 
     private void MkDir() {
@@ -64,7 +63,6 @@ public class MainWindow() : Window("LatihasExport") {
             _playerStateInstance = PlayerState.Instance();
             _achievementInstance = Achievement.Instance();
             _questManagerInstance = QuestManager.Instance();
-            _achievementLoaded = _achievementInstance->IsLoaded();
             var UIStateInstance = UIState.Instance();
             _lRecipe = BRecipe.GetData();
             var tmp = Gl<FishParameter>(i => i.IsInLog && i.Text != "").ToArray();
@@ -83,7 +81,7 @@ public class MainWindow() : Window("LatihasExport") {
                 DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)!.Value.Name.ToString(),
                 ""
             )).ToArray();
-            if (_achievementLoaded) _lAchievement = BAchievement.GetData();
+            if (_achievementInstance->IsLoaded()) _lAchievement = BAchievement.GetData();
             _lTripleTriadCard = Gl<TripleTriadCard>(i => i.RowId > 0 && i.Name != "" && !UIStateInstance->IsTripleTriadCardUnlocked((ushort)i.RowId))
                 .Select(res => new BT2(
                     res.RowId.ToString(),
@@ -232,16 +230,22 @@ public class MainWindow() : Window("LatihasExport") {
                 NewTable(BUncaughtFish.Header, _lsFishUnCaught, BUncaughtFish.Acts, filter: BUncaughtFish.Filters, filterTag: "_lsFishUnCaught");
             });
             NewTab("成就", () => {
-                if (_achievementLoaded) {
+                if (_lAchievement != null) {
                     if (ImGui.Button("一键获取空数据(可能会卡死)"))
-                        foreach (var res in _lAchievement!) {
+                        foreach (var res in _lAchievement) {
                             if (AchievementServiceInstance.Current.ContainsKey(res._rowId)) continue;
                             AchievementServiceInstance.UpdateProgress(res._rowId);
                         }
                     ImGui.SameLine();
                     if (ImGui.Button("重置队列(可清除卡死)")) AchievementServiceInstance.Reset();
                     ImGui.SameLine();
-                    NewTable(BAchievement.Header, _lAchievement!, BAchievement.Acts, "成就", BAchievement.Filters, "_lAchievement");
+                    if (ImGui.Button("重置获取到的数据")) {
+                        AchievementServiceInstance.Reset();
+                        AchievementServiceInstance.Current.Clear();
+                        AchievementServiceInstance.Max.Clear();
+                    }
+                    ImGui.SameLine();
+                    NewTable(BAchievement.Header, _lAchievement, BAchievement.Acts, "成就", BAchievement.Filters, "_lAchievement");
                 }
                 else ImGui.Text("打开一次成就界面以刷新");
             });
