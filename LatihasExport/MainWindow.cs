@@ -91,7 +91,7 @@ public class MainWindow() : Window("LatihasExport") {
                     res.Name.ToString()
                 )).ToArray();
             _lLeve = BLeve.GetData();
-            _lLeveAccepted = _questManagerInstance->LeveQuests.ToArray().Where(i => i.LeveId != 0).Select(i => _lLeve.First(x => x._rowId == i.LeveId)).ToArray();
+            _lLeveAccepted = _questManagerInstance->LeveQuests.ToArray().Where(i => i.LeveId != 0).Select(i => _lLeve.FirstOrDefault(x => x._rowId == i.LeveId)).Where(i=>i is not null).Select(i=>i!).ToArray();
             _lQuest = BQuest.GetData();
             _lOrchestrion = Gl<Orchestrion>(i => !_playerStateInstance->IsOrchestrionRollUnlocked(i.RowId) && i.Name != "").Select(res => new BT2(
                 res.RowId.ToString(),
@@ -124,7 +124,7 @@ public class MainWindow() : Window("LatihasExport") {
                 i.InstanceContentType.RowId is not ((int)InstanceContentType.QuestBattle
                     or (int)TreasureHuntDungeon or (int)Mahjong or (int)GoldSaucer or (int)OceanFishing or (int)UnrealTrial
                     or (int)InstanceContentType.DeepDungeon or (int)RivalWing or (int)CrystallineConflict or (int)SeasonalDungeon
-                    or (int)InstanceContentType.TripleTriad)
+                    or (int)InstanceContentType.TripleTriad or (int)BeginnerTraining)
             ).Select(res => new BHowTo(
                 res.RowId.ToString(), ((InstanceContentType)res.InstanceContentType.RowId).ToString(), res.ContentFinderCondition.Value.Name.ToString()
             )).ToArray();
@@ -156,6 +156,7 @@ public class MainWindow() : Window("LatihasExport") {
     }
 
     private static void NewTable<T>(string[] header, T[] data, Action<T>[] acts, string? csvName = null, Func<T, string>[]? filter = null, string? filterTag = null) {
+        if (data.Length == 0) return;
         if (csvName != null) ToCsv(header, data, csvName);
         var datax = (data.Clone() as T[])!;
         if (ImGui.BeginTable("Table", acts.Length, ImGuiTableFlag)) {
@@ -244,6 +245,7 @@ public class MainWindow() : Window("LatihasExport") {
                         Content = s
                     });
                 }
+                ImGui.SameLine();
                 NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts, "制作笔记", BRecipe.Filters, "_lRecipe");
             });
             NewTab("钓鱼", () => {
@@ -253,7 +255,10 @@ public class MainWindow() : Window("LatihasExport") {
                     foreach (var res in _lsFishCaught) sb.Append(res).Append(',');
                     sb.Remove(sb.Length - 1, 1).Append("]}");
                     WriteFile("fish.json", sb.ToString());
-                    Log.Info("导完了");
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "导完了",
+                        Content = "已导出到 fish.json"
+                    });
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("打开鱼糕")) Start("https://fish.ffmomola.com/ng/#/wiki/fishing");
@@ -291,7 +296,10 @@ public class MainWindow() : Window("LatihasExport") {
                     }
                     sb.Remove(sb.Length - 1, 1).Append(']');
                     WriteFile("ttc.json", sb.ToString());
-                    Log.Info("导完了");
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "导完了",
+                        Content = "已导出到 ttc.json"
+                    });
                 }
                 ImGui.SameLine();
                 if (ImGui.Button("打开arrtripletriad.com")) Start("https://arrtripletriad.com/cn/huan-ka-yi-lan");
