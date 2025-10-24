@@ -16,9 +16,12 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
+using static FFXIVClientStructs.FFXIV.Client.Game.InstanceContent.InstanceContentType;
 using static LatihasExport.Plugin;
 using Achievement = FFXIVClientStructs.FFXIV.Client.Game.UI.Achievement;
 using Action = System.Action;
+using InstanceContent = Lumina.Excel.Sheets.InstanceContent;
+using InstanceContentType = FFXIVClientStructs.FFXIV.Client.Game.InstanceContent.InstanceContentType;
 
 namespace LatihasExport;
 
@@ -33,7 +36,7 @@ public class MainWindow() : Window("LatihasExport") {
     private static BT2[] _lTripleTriadCard = null!, _lOrchestrion = null!;
     private static BLeve[] _lLeve = null!, _lLeveAccepted = null!;
     private static BQuest[] _lQuest = null!;
-    private static BHowTo[] _lHowto = null!;
+    private static BHowTo[] _lHowto = null!, lInstanceContent = null!;
     private static BT3[] _lMount = null!, _lOrnament = null!, _lGlasses = null!, _lEmote = null!, _lCompanion = null!;
     private static unsafe PlayerState* _playerStateInstance;
     private static unsafe Achievement* _achievementInstance;
@@ -114,6 +117,16 @@ public class MainWindow() : Window("LatihasExport") {
                 res.RowId.ToString(),
                 res.Category.Value.Category.ToString(),
                 res.Name.ToString()
+            )).ToArray();
+            lInstanceContent = Gl<InstanceContent>(i =>
+                !UIState.IsInstanceContentCompleted(i.RowId) &&
+                !i.ContentFinderCondition.Value.Name.IsEmpty &&
+                i.InstanceContentType.RowId is not ((int)InstanceContentType.QuestBattle
+                    or (int)TreasureHuntDungeon or (int)Mahjong or (int)GoldSaucer or (int)OceanFishing or (int)UnrealTrial
+                    or (int)InstanceContentType.DeepDungeon or (int)RivalWing or (int)CrystallineConflict or (int)SeasonalDungeon
+                    or (int)InstanceContentType.TripleTriad)
+            ).Select(res => new BHowTo(
+                res.RowId.ToString(), ((InstanceContentType)res.InstanceContentType.RowId).ToString(), res.ContentFinderCondition.Value.Name.ToString()
             )).ToArray();
             _lCompanion = Gl<Companion>(i => !UIStateInstance->IsCompanionUnlocked(i.RowId) && i.Icon != 0).Select(res => new BT3(
                 res.RowId.ToString(),
@@ -211,6 +224,22 @@ public class MainWindow() : Window("LatihasExport") {
                     });
                 }
                 ImGui.SameLine();
+                if (ImGui.Button("导出前50到Artisan")) {
+                    var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
+                    var iter = 0;
+                    foreach (var p in _lRecipe.Select(acc => BRecipe.GetMaterial(acc.Name)))
+                        if (p != 0) {
+                            if (iter++ == 49) break;
+                            sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
+                        }
+                    sb.Append("]}");
+                    var s = sb.ToString();
+                    ImGui.SetClipboardText(s);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制前50",
+                        Content = s
+                    });
+                }
                 NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts, "制作笔记", BRecipe.Filters, "_lRecipe");
             });
             NewTab("钓鱼", () => {
@@ -294,6 +323,23 @@ public class MainWindow() : Window("LatihasExport") {
                     });
                 }
                 ImGui.SameLine();
+                if (ImGui.Button("导出所有的可制作物品前50到Artisan")) {
+                    var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
+                    var iter = 0;
+                    foreach (var p in _lLeve.Select(acc => BRecipe.GetMaterial(acc.ItemName)))
+                        if (p != 0) {
+                            if (iter++ == 49) break;
+                            sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
+                        }
+                    sb.Append("]}");
+                    var s = sb.ToString();
+                    ImGui.SetClipboardText(s);
+                    NotificationManager.AddNotification(new Notification {
+                        Title = "已复制前50",
+                        Content = s
+                    });
+                }
+                ImGui.SameLine();
                 if (ImGui.Button("导出所有的不可制作物品")) {
                     var sb = new StringBuilder();
                     foreach (var p in _lLeve.Select(acc => BRecipe.GetNonMaterial(acc.ItemName)))
@@ -321,21 +367,13 @@ public class MainWindow() : Window("LatihasExport") {
             NewTab("表情", () => NewTable(BT3.Header, _lEmote, BT3.Acts, "表情", BT3.Filters, "_lEmote"));
             NewTab("教程", () => NewTable(BHowTo.Header, _lHowto, BHowTo.Acts, "教程", BHowTo.Filters, "_lHowto"));
             NewTab("宠物", () => NewTable(BT3.Header, _lCompanion, BT3.Acts, "宠物", BT3.Filters, "_lCompanion"));
+            NewTab("副本", () => NewTable(BHowTo.Header, lInstanceContent, BHowTo.Acts, "副本", BHowTo.Filters, "_lInstanceContent"));
             // NewTab("陆行鸟车", () => {
             // 	unsafe {
             // 		NewTable(["序号", "名称"], Gl<ChocoboTaxiStand>(i =>
             // 			!UIState.Instance()->IsChocoboTaxiStandUnlocked(i.RowId)), [
             // 			res => ImGui.Text(res.RowId.ToString()),
             // 			res => ImGui.Text(res.PlaceName.ToString())
-            // 		]);
-            // 	}
-            // });
-            // NewTab("副本", () => {
-            // 	unsafe {
-            // 		NewTable([], Gl< Lumina.Excel.Sheets.PublicContent>(i =>
-            // 			!UIState.IsPublicContentCompleted(i.RowId)), [
-            // 			res => ImGui.Text(res.RowId.ToString()),
-            // 			res =>ImGui.Text(res.Name.ToString())
             // 		]);
             // 	}
             // });
