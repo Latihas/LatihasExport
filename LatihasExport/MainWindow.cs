@@ -148,6 +148,10 @@ public class MainWindow() : Window("LatihasExport") {
             var sb = new StringBuilder(string.Join(",", header)).Append('\n');
             foreach (var p in data) sb.Append(p).Append('\n');
             File.WriteAllText(Path.Combine(Plugin.Configuration.SavePath, csvName), sb.ToString(), Encoding.UTF8);
+            NotificationManager.AddNotification(new Notification {
+                Title = csvName,
+                Content = $"已导出到 {csvName}"
+            });
         }
     }
 
