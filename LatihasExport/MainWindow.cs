@@ -41,6 +41,8 @@ public class MainWindow() : Window("LatihasExport") {
     private static unsafe PlayerState* _playerStateInstance;
     private static unsafe Achievement* _achievementInstance;
     private static unsafe QuestManager* _questManagerInstance;
+
+    private static readonly Dictionary<string, string[]> tableFilterData = new();
     private readonly Configuration _configuration = Plugin.Configuration;
 
     private void MkDir() {
@@ -165,7 +167,22 @@ public class MainWindow() : Window("LatihasExport") {
     private static void NewTable<T>(string[] header, T[]? data, Action<T>[] acts, string? csvName = null, Func<T, string>[]? filter = null, string? filterTag = null) {
         if (data is null || data.Length == 0) return;
         if (csvName != null) ToCsv(header, data, csvName);
-        var datax = (data.Clone() as T[])!;
+        var datax = data;
+        if (filter != null && filterTag != null) {
+            if (!tableFilterData.TryGetValue(filterTag, out var fd)) {
+                fd = new string[acts.Length];
+                for (var i = 0; i < fd.Length; i++) fd[i] = "";
+                tableFilterData[filterTag] = fd;
+            }
+            datax = datax.Where(x => {
+                for (var j = 0; j < acts.Length; j++) {
+                    if (header[j].IsNullOrEmpty()) continue;
+                    var filterText = tableFilterData[filterTag][j];
+                    if (!string.IsNullOrEmpty(filterText) && !filter[j](x).Contains(filterText)) return false;
+                }
+                return true;
+            }).ToArray();
+        }
         if (ImGui.BeginTable("Table", acts.Length + 1, ImGuiTableFlag)) {
             ImGui.TableSetupColumn("Order", ImGuiTableColumnFlags.WidthFixed, 96);
             foreach (var item in header) {
@@ -175,19 +192,12 @@ public class MainWindow() : Window("LatihasExport") {
             }
             ImGui.TableHeadersRow();
             if (filter != null && filterTag != null) {
-                var filterdata = new string[acts.Length];
-                for (var i = 0; i < filterdata.Length; i++) filterdata[i] = "";
                 ImGui.TableNextRow();
                 for (var i = 0; i < acts.Length; i++) {
                     if (header[i].IsNullOrEmpty()) continue;
                     ImGui.TableSetColumnIndex(i + 1);
                     ImGui.SetNextItemWidth(-1);
-                    if (ImGui.InputText($"##Filter{i}", ref filterdata[i])) {
-                        for (var j = 0; j < acts.Length; j++) {
-                            if (header[j].IsNullOrEmpty()) continue;
-                            datax = datax.Where(x => filter[j](x).Contains(filterdata[j])).ToArray();
-                        }
-                    }
+                    ImGui.InputText($"##Filter_{filterTag}_{i}", ref tableFilterData[filterTag][i]);
                 }
             }
             for (var index = 0; index < datax.Length; index++) {
@@ -503,8 +513,8 @@ public class MainWindow() : Window("LatihasExport") {
         public override string ToString() => $"{RowId},{ItemId},{Name},{Place}";
     }
 
-    private class BAchievement(uint rowId, int icon, string name, string points, string category) {
-        internal static readonly string[] Header = ["序号", "", "名称", "成就点", "分类", "进度", "查询"];
+    private class BAchievement(uint rowId, int icon, string name, string points, string category, string desc) {
+        internal static readonly string[] Header = ["序号", "", "名称", "成就点", "分类", "进度", "查询", "描述"];
         internal static readonly Action<BAchievement>[] Acts = [
             res => ImGui.Text(res.RowId),
             res => RenderIcon(res.Icon),
@@ -522,7 +532,8 @@ public class MainWindow() : Window("LatihasExport") {
             res => ImGui.Text(GetProcess(res)),
             res => {
                 if (ImGui.Button($"查询:{res.Name}")) AchievementServiceInstance.UpdateProgress(res._rowId);
-            }
+            },
+            res => ImGui.Text(res.Desc)
         ];
         internal static readonly Func<BAchievement, string>[] Filters = [
             res => res.RowId,
@@ -531,16 +542,18 @@ public class MainWindow() : Window("LatihasExport") {
             res => res.Points,
             res => res.Category,
             _ => "",
-            _ => ""
+            _ => "",
+            res => res.Desc
         ];
         internal readonly uint _rowId = rowId;
         private readonly string Category = category;
+        private readonly string Desc = desc;
         private readonly int Icon = icon;
         private readonly string Name = name;
         private readonly string Points = points;
         private readonly string RowId = rowId.ToString();
         private static string GetProcess(BAchievement res) => !AchievementServiceInstance.Current.TryGetValue(res._rowId, out var x) ? "" : $"{x}/{AchievementServiceInstance.Max[res._rowId]}";
-        public override string ToString() => $"{RowId},,{Name},{Points},{Category},{GetProcess(this)},";
+        public override string ToString() => $"{RowId},,{Name},{Points},{Category},'{GetProcess(this)},,{Desc}";
 
         internal static unsafe BAchievement[] GetData() => Gl<Lumina.Excel.Sheets.Achievement>(i =>
             !_achievementInstance->IsComplete((int)i.RowId) && i.Name != "" && !i.AchievementHideCondition.Value.HideAchievement && i.AchievementCategory.Value.AchievementKind.Value.RowId is not (13 or 8 or 0)).Select(res => new BAchievement(
@@ -548,7 +561,8 @@ public class MainWindow() : Window("LatihasExport") {
             res.Icon,
             res.Name.ToString(),
             res.Points.ToString(),
-            res.AchievementCategory.Value.Name.ToString()
+            res.AchievementCategory.Value.Name.ToString(),
+            res.Description.ToString()
         )).ToArray();
     }
 
