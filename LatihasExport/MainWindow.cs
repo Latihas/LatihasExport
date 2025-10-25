@@ -166,7 +166,8 @@ public class MainWindow() : Window("LatihasExport") {
         if (data is null || data.Length == 0) return;
         if (csvName != null) ToCsv(header, data, csvName);
         var datax = (data.Clone() as T[])!;
-        if (ImGui.BeginTable("Table", acts.Length, ImGuiTableFlag)) {
+        if (ImGui.BeginTable("Table", acts.Length + 1, ImGuiTableFlag)) {
+            ImGui.TableSetupColumn("Order", ImGuiTableColumnFlags.WidthFixed, 96);
             foreach (var item in header) {
                 if (item == "") ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 24);
                 else if (item.Contains("序号")) ImGui.TableSetupColumn(item, ImGuiTableColumnFlags.WidthFixed, 96);
@@ -179,7 +180,7 @@ public class MainWindow() : Window("LatihasExport") {
                 ImGui.TableNextRow();
                 for (var i = 0; i < acts.Length; i++) {
                     if (header[i].IsNullOrEmpty()) continue;
-                    ImGui.TableSetColumnIndex(i);
+                    ImGui.TableSetColumnIndex(i + 1);
                     ImGui.SetNextItemWidth(-1);
                     if (ImGui.InputText($"##Filter{i}", ref filterdata[i])) {
                         for (var j = 0; j < acts.Length; j++) {
@@ -189,10 +190,13 @@ public class MainWindow() : Window("LatihasExport") {
                     }
                 }
             }
-            foreach (var res in datax) {
+            for (var index = 0; index < datax.Length; index++) {
+                var res = datax[index];
                 ImGui.TableNextRow();
+                ImGui.TableSetColumnIndex(0);
+                ImGui.Text((index + 1).ToString());
                 for (var i = 0; i < acts.Length; i++) {
-                    ImGui.TableSetColumnIndex(i);
+                    ImGui.TableSetColumnIndex(i + 1);
                     acts[i](res);
                 }
             }
