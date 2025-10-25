@@ -57,8 +57,15 @@ public class MainWindow() : Window("LatihasExport") {
         File.WriteAllText(Path.Combine(_configuration.SavePath, fn), content);
     }
 
-    private static IEnumerable<T> Gl<T>(Func<T, bool> predicate) where T : struct, IExcelRow<T> =>
-        DataManager.GameData.GetExcelSheet<T>()!.Where(predicate);
+    private static IEnumerable<T> Gl<T>(Func<T, bool> predicate) where T : struct, IExcelRow<T> {
+        try {
+            return DataManager.GameData.GetExcelSheet<T>()!.Where(predicate);
+        }
+        catch (Exception e) {
+            Log.Error(e.ToString());
+            return new List<T>();
+        }
+    }
 
 
     internal static unsafe void RefreshData() {
@@ -90,8 +97,8 @@ public class MainWindow() : Window("LatihasExport") {
                     res.RowId.ToString(),
                     res.Name.ToString()
                 )).ToArray();
-            _lLeve = BLeve.GetData();
-            _lLeveAccepted = _questManagerInstance->LeveQuests.ToArray().Where(i => i.LeveId != 0).Select(i => _lLeve.FirstOrDefault(x => x._rowId == i.LeveId)).Where(i=>i is not null).Select(i=>i!).ToArray();
+            _lLeve = BLeve.GetUnCompleteData();
+            _lLeveAccepted = BLeve.GetAcceptedData();
             _lQuest = BQuest.GetData();
             _lOrchestrion = Gl<Orchestrion>(i => !_playerStateInstance->IsOrchestrionRollUnlocked(i.RowId) && i.Name != "").Select(res => new BT2(
                 res.RowId.ToString(),
@@ -155,8 +162,8 @@ public class MainWindow() : Window("LatihasExport") {
         }
     }
 
-    private static void NewTable<T>(string[] header, T[] data, Action<T>[] acts, string? csvName = null, Func<T, string>[]? filter = null, string? filterTag = null) {
-        if (data.Length == 0) return;
+    private static void NewTable<T>(string[] header, T[]? data, Action<T>[] acts, string? csvName = null, Func<T, string>[]? filter = null, string? filterTag = null) {
+        if (data is null || data.Length == 0) return;
         if (csvName != null) ToCsv(header, data, csvName);
         var datax = (data.Clone() as T[])!;
         if (ImGui.BeginTable("Table", acts.Length, ImGuiTableFlag)) {
@@ -585,7 +592,6 @@ public class MainWindow() : Window("LatihasExport") {
             res => res.ItemName,
             res => res.ItemCount
         ];
-        internal readonly uint _rowId = rowId;
         private readonly string ItemCount = itemCount;
         internal readonly string ItemName = itemName;
         private readonly string Job = job;
@@ -597,8 +603,15 @@ public class MainWindow() : Window("LatihasExport") {
         private readonly string StartZone = startzone;
         public override string ToString() => $"{RowId},{Job},{Lv},{Name},{StartZone},{StartPlace},{Npc},{ItemName},{ItemCount}";
 
-        internal static unsafe BLeve[] GetData() {
-            var lLevex = Gl<Leve>(i => !_questManagerInstance->IsLevequestComplete((ushort)i.RowId) && i.AllowanceCost != 0 && i is { RowId: > 0, GilReward: > 0 }).ToArray();
+        internal static unsafe BLeve[] GetUnCompleteData() =>
+            GetData(Gl<Leve>(i => !_questManagerInstance->IsLevequestComplete((ushort)i.RowId) && i.AllowanceCost != 0 && i is { RowId: > 0, GilReward: > 0 }).ToArray());
+
+        internal static unsafe BLeve[] GetAcceptedData() {
+            var x = Gl<Leve>(i => i.AllowanceCost != 0 && i is { RowId: > 0, GilReward: > 0 }).ToArray();
+            return GetData(_questManagerInstance->LeveQuests.ToArray().Where(i => i.LeveId != 0).Select(i => x.FirstOrDefault(j => j.RowId == i.LeveId)).ToArray());
+        }
+
+        private static BLeve[] GetData(Leve[] lLevex) {
             var lLeveName = lLevex.Select(i => i.Name);
             var lDcLeves = new Dictionary<ReadOnlySeString, CraftLeve>();
             foreach (var x in Gl<CraftLeve>(i => lLeveName.Contains(i.Leve.Value.Name)))
@@ -741,16 +754,17 @@ public class MainWindow() : Window("LatihasExport") {
         public override string ToString() => $"{RowId},{Lv},,{Name},{Place},{Category1},{Category2},{Category3}";
 
         internal static unsafe BQuest[] GetData() =>
-            Gl<Quest>(i => !UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted((ushort)i.RowId + 0x10000u) && i.PlaceName.Value.Name != "" && i.JournalGenre.RowId > 0 && i.JournalGenre.Value.JournalCategory.Value.RowId != 96).Select(res => new BQuest(
-                res.RowId.ToString(),
-                res.ClassJobLevel[0].ToString(),
-                res.JournalGenre.Value.Icon,
-                res.Name.ToString(),
-                res.PlaceName.Value.Name.ToString(),
-                res.JournalGenre.Value.Name.ToString(),
-                res.JournalGenre.Value.JournalCategory.Value.Name.ToString(),
-                res.JournalGenre.Value.JournalCategory.Value.JournalSection.Value.Name.ToString()
-            )).ToArray();
+            Gl<Quest>(i => !UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted((ushort)i.RowId + 0x10000u) && i.PlaceName.Value.Name != "" && i.JournalGenre.RowId > 0 && i.JournalGenre.Value.JournalCategory.Value.RowId != 96 && !i.IsRepeatable)
+                .Select(res => new BQuest(
+                    res.RowId.ToString(),
+                    res.ClassJobLevel[0].ToString(),
+                    res.JournalGenre.Value.Icon,
+                    res.Name.ToString(),
+                    res.PlaceName.Value.Name.ToString(),
+                    res.JournalGenre.Value.Name.ToString(),
+                    res.JournalGenre.Value.JournalCategory.Value.Name.ToString(),
+                    res.JournalGenre.Value.JournalCategory.Value.JournalSection.Value.Name.ToString()
+                )).ToArray();
     }
 
     #endregion
