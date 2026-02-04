@@ -346,7 +346,7 @@ public class MainWindow() : Window("LatihasExport") {
                     var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
                     foreach (var acc in _lLeve) {
                         var p = BRecipe.GetMaterial(acc.ItemName);
-                        if (p != 0) sb.Append($"{{\"ID\":{p},\"Quantity\":{acc.ItemCount},\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
+                        if (p != 0) sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
                     }
                     sb.Append("]}");
                     var s = sb.ToString();
@@ -364,7 +364,7 @@ public class MainWindow() : Window("LatihasExport") {
                         var p = BRecipe.GetMaterial(acc.ItemName);
                         if (p != 0) {
                             if (iter++ == 49) break;
-                            sb.Append($"{{\"ID\":{p},\"Quantity\":{acc.ItemCount},\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
+                            sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
                         }
                     }
                     sb.Append("]}");
