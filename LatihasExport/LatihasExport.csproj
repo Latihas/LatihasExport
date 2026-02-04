@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration>Release</Configuration>
     <AssemblyName>LatihasExport</AssemblyName>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <Optimize>true</Optimize>
     <OutputPath>bin</OutputPath>
@@ -11,6 +11,7 @@
     <Nullable>enable</Nullable>
     <DebugType>none</DebugType>
     <NoWarn>CA1816</NoWarn>
+    <GenerateSatelliteAssembliesForCore>false</GenerateSatelliteAssembliesForCore>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>Latest</LangVersion>
@@ -22,27 +23,36 @@
   <ItemGroup>
     <Reference Include="Lumina">
       <HintPath>$(DalamudPath)\Lumina.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Lumina.Excel">
       <HintPath>$(DalamudPath)\Lumina.Excel.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Dalamud">
       <HintPath>$(DalamudPath)\Dalamud.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudPath)\FFXIVClientStructs.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="ImGui.NET">
       <HintPath>$(DalamudPath)\Dalamud.Bindings.ImGui.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="InteropGenerator.Runtime">
+      <HintPath>$(DalamudPath)\InteropGenerator.Runtime.dll</HintPath>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="LatihasExport.json" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
-  <Target Name="DeleteFiles" AfterTargets="Build">
-    <ItemGroup>
-      <FilesToDelete Include="$(OutputPath)/*" Exclude="$(OutputPath)/LatihasExport*"/>
-    </ItemGroup>
-    <Delete Files="@(FilesToDelete)"/>
-  </Target>
+  <!--  <Target Name="DeleteFiles" AfterTargets="Build">-->
+  <!--    <ItemGroup>-->
+  <!--      <FilesToDelete Include="$(OutputPath)/*" Exclude="$(OutputPath)/LatihasExport*"/>-->
+  <!--    </ItemGroup>-->
+  <!--    <Delete Files="@(FilesToDelete)"/>-->
+  <!--  </Target>-->
 </Project>

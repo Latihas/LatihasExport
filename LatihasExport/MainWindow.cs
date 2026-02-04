@@ -120,7 +120,7 @@ public class MainWindow() : Window("LatihasExport") {
                 res.Singular.ToString())).ToArray();
             _lEmote = Gl<Emote>(i => !UIStateInstance->IsEmoteUnlocked((ushort)i.RowId) && i.Icon != 0 && !i.Name.ToString().IsNullOrEmpty()).Select(res => new BT3(
                 res.RowId.ToString(),
-                res.Icon,
+                (int)res.Icon,
                 res.Name.ToString())).ToArray();
             _lHowto = Gl<HowTo>(i => !UIStateInstance->IsHowToUnlocked(i.RowId) && i.Name != "").Select(res => new BHowTo(
                 res.RowId.ToString(),
@@ -312,8 +312,8 @@ public class MainWindow() : Window("LatihasExport") {
                 if (ImGui.Button("导出到arrtripletriad.com")) {
                     var sb = new StringBuilder("[false,");
                     unsafe {
-                        var bitArray = new BitArray(UIState.Instance()->UnlockedTripleTriadCardsBitmask.ToArray());
-                        for (var l = 1; l < bitArray.Count; l++) sb.Append(bitArray[l - 1].ToString().ToLower()).Append(',');
+                        var bitArray = UIState.Instance()->UnlockedTripleTriadCardsBitArray;
+                        for (var l = 1; l < bitArray.ByteLength; l++) sb.Append(bitArray[l - 1].ToString().ToLower()).Append(',');
                     }
                     sb.Remove(sb.Length - 1, 1).Append(']');
                     WriteFile("ttc.json", sb.ToString());
@@ -344,9 +344,10 @@ public class MainWindow() : Window("LatihasExport") {
                 ImGui.SameLine();
                 if (ImGui.Button("导出所有的可制作物品到Artisan")) {
                     var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
-                    foreach (var p in _lLeve.Select(acc => BRecipe.GetMaterial(acc.ItemName)))
-                        if (p != 0)
-                            sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
+                    foreach (var acc in _lLeve) {
+                        var p = BRecipe.GetMaterial(acc.ItemName);
+                        if (p != 0) sb.Append($"{{\"ID\":{p},\"Quantity\":{acc.ItemCount},\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
+                    }
                     sb.Append("]}");
                     var s = sb.ToString();
                     ImGui.SetClipboardText(s);
@@ -359,11 +360,13 @@ public class MainWindow() : Window("LatihasExport") {
                 if (ImGui.Button("导出所有的可制作物品前50到Artisan")) {
                     var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
                     var iter = 0;
-                    foreach (var p in _lLeve.Select(acc => BRecipe.GetMaterial(acc.ItemName)))
+                    foreach (var acc in _lLeve) {
+                        var p = BRecipe.GetMaterial(acc.ItemName);
                         if (p != 0) {
                             if (iter++ == 49) break;
-                            sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
+                            sb.Append($"{{\"ID\":{p},\"Quantity\":{acc.ItemCount},\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
                         }
+                    }
                     sb.Append("]}");
                     var s = sb.ToString();
                     ImGui.SetClipboardText(s);
@@ -558,7 +561,7 @@ public class MainWindow() : Window("LatihasExport") {
         internal static unsafe BAchievement[] GetData() => Gl<Lumina.Excel.Sheets.Achievement>(i =>
             !_achievementInstance->IsComplete((int)i.RowId) && i.Name != "" && !i.AchievementHideCondition.Value.HideAchievement && i.AchievementCategory.Value.AchievementKind.Value.RowId is not (13 or 8 or 0)).Select(res => new BAchievement(
             res.RowId,
-            res.Icon,
+            (int)res.Icon,
             res.Name.ToString(),
             res.Points.ToString(),
             res.AchievementCategory.Value.Name.ToString(),
@@ -610,7 +613,7 @@ public class MainWindow() : Window("LatihasExport") {
             res => res.ItemName,
             res => res.ItemCount
         ];
-        private readonly string ItemCount = itemCount;
+        internal readonly string ItemCount = itemCount;
         internal readonly string ItemName = itemName;
         private readonly string Job = job;
         private readonly string Lv = lv;
