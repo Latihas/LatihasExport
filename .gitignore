@@ -1,3 +1,4 @@
-﻿/LatihasExport/obj/
-/LatihasExport/bin/
+﻿/obj/
+/bin/
 /.idea/
+*.DotSettings.user
