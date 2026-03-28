@@ -1,58 +1,52 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Dalamud.NET.Sdk/14.0.2">
   <PropertyGroup>
-    <Configuration>Release</Configuration>
-    <AssemblyName>LatihasExport</AssemblyName>
-    <TargetFramework>net10.0</TargetFramework>
-    <PlatformTarget>x64</PlatformTarget>
-    <Optimize>true</Optimize>
     <OutputPath>bin</OutputPath>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DebugSymbols>false</DebugSymbols>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Nullable>enable</Nullable>
-    <DebugType>none</DebugType>
-    <NoWarn>CA1816</NoWarn>
-    <GenerateSatelliteAssembliesForCore>false</GenerateSatelliteAssembliesForCore>
+    <NoWarn>MSB3245;MSB3243;CA1416;CA1816</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <LangVersion>Latest</LangVersion>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <XIVLauncherPath>$(userprofile)\AppData\Roaming\XIVLauncherCN</XIVLauncherPath>
-    <DalamudPath>$(XIVLauncherPath)\addon\Hooks\dev</DalamudPath>
-    <NoWarn>CA1416;</NoWarn>
+    <Version>7.45.2.0</Version>
+    <RepoUrl>https://github.com/Latihas/LatihasExport</RepoUrl>
+    <Author>Latihas</Author>
+    <Name>LatihasExport</Name>
+    <Description>自用收集工具</Description>
+    <Punchline>自用收集工具</Punchline>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Optimize>true</Optimize>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Lumina">
-      <HintPath>$(DalamudPath)\Lumina.dll</HintPath>
+      <HintPath>$(DalamudLibPath)\Lumina.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Lumina.Excel">
-      <HintPath>$(DalamudPath)\Lumina.Excel.dll</HintPath>
+      <HintPath>$(DalamudLibPath)\Lumina.Excel.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Dalamud">
-      <HintPath>$(DalamudPath)\Dalamud.dll</HintPath>
+      <HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="FFXIVClientStructs">
-      <HintPath>$(DalamudPath)\FFXIVClientStructs.dll</HintPath>
+      <HintPath>$(DalamudLibPath)\FFXIVClientStructs.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="ImGui.NET">
-      <HintPath>$(DalamudPath)\Dalamud.Bindings.ImGui.dll</HintPath>
+      <HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImGui.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="InteropGenerator.Runtime">
-      <HintPath>$(DalamudPath)\InteropGenerator.Runtime.dll</HintPath>
+      <HintPath>$(DalamudLibPath)\InteropGenerator.Runtime.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="LatihasExport.json" CopyToOutputDirectory="PreserveNewest"/>
-  </ItemGroup>
-  <!--  <Target Name="DeleteFiles" AfterTargets="Build">-->
-  <!--    <ItemGroup>-->
-  <!--      <FilesToDelete Include="$(OutputPath)/*" Exclude="$(OutputPath)/LatihasExport*"/>-->
-  <!--    </ItemGroup>-->
-  <!--    <Delete Files="@(FilesToDelete)"/>-->
-  <!--  </Target>-->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == ''">
+    <DalamudLibPath>$(appdata)\XIVLauncherCN\addon\Hooks\dev</DalamudLibPath>
+  </PropertyGroup>
 </Project>

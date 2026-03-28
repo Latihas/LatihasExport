@@ -2,3 +2,4 @@
 /bin/
 /.idea/
 *.DotSettings.user
+packages.lock.json
