@@ -32,5 +32,7 @@ jobs:
         with:
           tag_name: ${{ steps.generate_version.outputs.VERSION }}
           name: Release ${{ steps.generate_version.outputs.VERSION }}
-          files: ./bin/LatihasExport/latest.zip
+          files: |
+            ./bin/LatihasExport/latest.zip
+            ./bin/LatihasExport/LatihasExport.json
           generate_release_notes: true

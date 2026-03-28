@@ -4,7 +4,6 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup>
     <Version>7.45.2.0</Version>
