@@ -47,8 +47,7 @@ public class MainWindow() : Window("LatihasExport") {
 	private void MkDir() {
 		try {
 			Directory.CreateDirectory(_configuration.SavePath);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			Log.Error($"创建目录失败: {e.Message}");
 		}
 	}
@@ -61,8 +60,7 @@ public class MainWindow() : Window("LatihasExport") {
 	private static IEnumerable<T> Gl<T>(Func<T, bool> predicate) where T : struct, IExcelRow<T> {
 		try {
 			return DataManager.GameData.GetExcelSheet<T>()!.Where(predicate);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			Log.Error(e.ToString());
 			return new List<T>();
 		}
@@ -92,7 +90,10 @@ public class MainWindow() : Window("LatihasExport") {
 				DataManager.GetExcelSheet<Item>(DataManager.Language).GetRowOrDefault(res.Item.RowId)!.Value.Name.ToString(),
 				""
 			)).ToArray();
-			if (_achievementInstance->IsLoaded()) _lAchievement = BAchievement.GetData();
+			if (_achievementInstance->IsLoaded()) {
+				_lAchievement = BAchievement.GetData();
+				if (AchievementOrderByProgress) _lAchievement = _lAchievement.OrderBy(BAchievement.GetProcessFloat).Reverse().ToArray();
+			}
 			_lTripleTriadCard = Gl<TripleTriadCard>(i => i.RowId > 0 && i.Name != "" && !UIStateInstance->IsTripleTriadCardUnlocked((ushort)i.RowId))
 				.Select(res => new BT2(
 					res.RowId.ToString(),
@@ -140,8 +141,7 @@ public class MainWindow() : Window("LatihasExport") {
 				res.RowId.ToString(),
 				res.Icon,
 				res.Singular.ToString())).ToArray();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			Log.Error(e.ToString());
 		}
 	}
@@ -225,6 +225,8 @@ public class MainWindow() : Window("LatihasExport") {
 			ImGui.Image(icon.Handle, new Vector2(24, 24));
 	}
 
+	private static bool AchievementOrderByProgress;
+
 	public override void Draw() {
 		if (ImGui.InputText("保存路径", ref _configuration.SavePath, 114514)) _configuration.Save();
 		ImGui.SameLine();
@@ -289,6 +291,7 @@ public class MainWindow() : Window("LatihasExport") {
 			});
 			NewTab("成就", () => {
 				if (_lAchievement != null) {
+					if (ImGui.Checkbox("按照进度排序(勾选刷新，非实时更新)", ref AchievementOrderByProgress)) RefreshData();
 					if (ImGui.Button("一键获取空数据(可能会卡死)"))
 						foreach (var res in _lAchievement) {
 							if (AchievementServiceInstance.Current.ContainsKey(res._rowId)) continue;
@@ -304,8 +307,7 @@ public class MainWindow() : Window("LatihasExport") {
 					}
 					ImGui.SameLine();
 					NewTable(BAchievement.Header, _lAchievement, BAchievement.Acts, "成就", BAchievement.Filters, "_lAchievement");
-				}
-				else ImGui.Text("打开一次成就界面以刷新");
+				} else ImGui.Text("打开一次成就界面以刷新");
 			});
 			NewTab("幻卡", () => {
 				if (ImGui.Button("导出到arrtripletriad.com")) {
@@ -469,8 +471,7 @@ public class MainWindow() : Window("LatihasExport") {
 		internal static uint GetMaterial(string name) {
 			try {
 				return DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name).RowId;
-			}
-			catch (Exception) {
+			} catch (Exception) {
 				return 0;
 			}
 		}
@@ -479,8 +480,7 @@ public class MainWindow() : Window("LatihasExport") {
 			try {
 				_ = DataManager.GameData.GetExcelSheet<Recipe>()!.First(i => i.ItemResult.Value.Name == name);
 				return null;
-			}
-			catch (Exception) {
+			} catch (Exception) {
 				return name;
 			}
 		}
@@ -515,7 +515,7 @@ public class MainWindow() : Window("LatihasExport") {
 		public override string ToString() => $"{RowId},{ItemId},{Name},{Place}";
 	}
 
-	private class BAchievement(uint rowId, int icon, string name, string points, string category, string desc) {
+	internal class BAchievement(uint rowId, int icon, string name, string points, string category, string desc) {
 		internal static readonly string[] Header = ["序号", "", "名称", "成就点", "分类", "进度", "查询", "描述"];
 		internal static readonly Action<BAchievement>[] Acts = [
 			res => ImGui.Text(res.RowId),
@@ -531,7 +531,7 @@ public class MainWindow() : Window("LatihasExport") {
 			},
 			res => ImGui.Text(res.Points),
 			res => ImGui.Text(res.Category),
-			res => ImGui.Text(GetProcess(res)),
+			res => { ImGui.ProgressBar(GetProcessFloat(res), new Vector2(-1, 0), GetProcess(res)); },
 			res => {
 				if (ImGui.Button($"查询:{res.Name}")) AchievementServiceInstance.UpdateProgress(res._rowId);
 			},
@@ -555,6 +555,7 @@ public class MainWindow() : Window("LatihasExport") {
 		private readonly string Points = points;
 		private readonly string RowId = rowId.ToString();
 		private static string GetProcess(BAchievement res) => !AchievementServiceInstance.Current.TryGetValue(res._rowId, out var x) ? "" : $"{x}/{AchievementServiceInstance.Max[res._rowId]}";
+		internal static float GetProcessFloat(BAchievement res) => !AchievementServiceInstance.Current.TryGetValue(res._rowId, out var x) ? 0 : 1f * x / AchievementServiceInstance.Max[res._rowId];
 		public override string ToString() => $"{RowId},,{Name},{Points},{Category},'{GetProcess(this)},,{Desc}";
 
 		internal static unsafe BAchievement[] GetData() => Gl<Lumina.Excel.Sheets.Achievement>(i =>

@@ -6,7 +6,7 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>7.45.2.0</Version>
+    <Version>7.45.2.1</Version>
     <RepoUrl>https://github.com/Latihas/LatihasExport</RepoUrl>
     <Author>Latihas</Author>
     <Name>LatihasExport</Name>
