@@ -6,12 +6,8 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>7.45.2.1</Version>
+    <Version>7.50.0.0</Version>
     <RepoUrl>https://github.com/Latihas/LatihasExport</RepoUrl>
-    <Author>Latihas</Author>
-    <Name>LatihasExport</Name>
-    <Description>自用收集工具</Description>
-    <Punchline>自用收集工具</Punchline>
   </PropertyGroup>
   <PropertyGroup>
     <Optimize>true</Optimize>
