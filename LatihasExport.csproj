@@ -1,10 +1,7 @@
 ﻿<Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
     <OutputPath>bin</OutputPath>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-    <Version>7.50.0.1</Version>
+    <Version>7.50.0.2</Version>
     <RepoUrl>https://github.com/Latihas/LatihasExport</RepoUrl>
     <Author>Latihas</Author>
     <Name>LatihasExport</Name>
