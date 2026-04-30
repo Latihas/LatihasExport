@@ -1,18 +1,15 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/14.0.2">
+﻿<Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
     <OutputPath>bin</OutputPath>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Version>7.50.0.0</Version>
+    <Version>7.50.0.1</Version>
     <RepoUrl>https://github.com/Latihas/LatihasExport</RepoUrl>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Optimize>true</Optimize>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>none</DebugType>
+    <Author>Latihas</Author>
+    <Name>LatihasExport</Name>
+    <Description>自用收集工具</Description>
+    <Punchline>自用收集工具</Punchline>
   </PropertyGroup>
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == ''">
     <DalamudLibPath>$(appdata)\XIVLauncherCN\addon\Hooks\dev</DalamudLibPath>
