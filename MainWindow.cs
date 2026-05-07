@@ -93,7 +93,8 @@ public class MainWindow() : Window("LatihasExport") {
 			if (_achievementInstance->IsLoaded()) {
 				_lAchievement = BAchievement.GetData();
 				if (AchievementOrderByProgress) _lAchievement = _lAchievement.OrderBy(BAchievement.GetProcessFloat).Reverse().ToArray();
-			}
+			} else
+				_lAchievement = null;
 			_lTripleTriadCard = Gl<TripleTriadCard>(i => i.RowId > 0 && i.Name != "" && !UIStateInstance->IsTripleTriadCardUnlocked((ushort)i.RowId))
 				.Select(res => new BT2(
 					res.RowId.ToString(),
@@ -562,6 +563,7 @@ public class MainWindow() : Window("LatihasExport") {
 			!_achievementInstance->IsComplete((int)i.RowId) && i.Name != "" && !i.AchievementHideCondition.Value.HideAchievement
 			&& i.AchievementCategory.Value.RowId != 38
 			&& i.AchievementCategory.Value.AchievementKind.Value.RowId is not (13 or 0)
+			&& i.RowId != 310 && i.RowId != 311 && i.RowId != 312 && !i.Description.ToString().StartsWith("在水晶冲突的第")
 		).Select(res => new BAchievement(
 			res.RowId,
 			(int)res.Icon,
