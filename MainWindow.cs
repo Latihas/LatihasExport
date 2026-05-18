@@ -6,12 +6,18 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading.Tasks;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using FFXIVClientStructs.Interop;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -406,27 +412,93 @@ public class MainWindow() : Window("LatihasExport") {
 			NewTab("教程", () => NewTable(BHowTo.Header, _lHowto, BHowTo.Acts, "教程", BHowTo.Filters, "_lHowto"));
 			NewTab("宠物", () => NewTable(BT3.Header, _lCompanion, BT3.Acts, "宠物", BT3.Filters, "_lCompanion"));
 			NewTab("副本", () => NewTable(BHowTo.Header, lInstanceContent, BHowTo.Acts, "副本", BHowTo.Filters, "_lInstanceContent"));
-			// NewTab("陆行鸟车", () => {
-			// 	unsafe {
-			// 		NewTable(["序号", "名称"], Gl<ChocoboTaxiStand>(i =>
-			// 			!UIState.Instance()->IsChocoboTaxiStandUnlocked(i.RowId)), [
-			// 			res => ImGui.Text(res.RowId.ToString()),
-			// 			res => ImGui.Text(res.PlaceName.ToString())
-			// 		]);
-			// 	}
-			// });
-			// NewTab("过场动画", () => {
-			//     unsafe {
-			//         NewTable([], Gl<Cutscene>(i =>
-			//             !UIState.Instance()->IsCutsceneSeen(i.RowId)), [
-			//             res => ImGui.Text(res.RowId.ToString()),
-			//             res => ImGui.Text(res.Path.ToString()),
-			//         ]);
-			//     }
-			// });
+			NewTab("半自动采集理符", () => {
+				ImGui.Text("先接取并到达目的地附近开启理符任务，然后点击开始即可。");
+				if (!IsAutoGathering && ImGui.Button("开始")) {
+					IsAutoGathering = true;
+					Task.Run(async () => {
+						while (IsAutoGathering) {
+							var ptr = GameGui.GetAddonByName("Gathering");
+							if (ptr == null || ptr == IntPtr.Zero || !ptr.IsVisible) {
+								var pp = ObjectTable.LocalPlayer!.Position;
+								Pointer<GameObject> gp;
+								unsafe {
+									var gl = GameObjectManager.Instance()->Objects.IndexSorted.ToArray().Where(obj => {
+										try {
+											var o = obj.Value;
+											return o->ObjectKind == ObjectKind.GatheringPoint
+											       && o->NamePlateIconId == 71244
+											       && o->TargetableStatus.HasFlag(ObjectTargetableFlags.IsTargetable);
+										} catch (Exception) {
+											return false;
+										}
+									}).OrderBy(obj => Vector3.DistanceSquared(obj.Value->Position, pp)).FirstOrDefault();
+									if (gl == null) break;
+									gp = gl.Value;
+									Ipcs.PathfindAndMoveTo(gl.Value->Position, Plugin.Condition[ConditionFlag.Mounted]);
+								}
+								await Task.Delay(3000);
+								Ipcs.Stop();
+								await Task.Delay(200);
+								unsafe {
+									TargetSystem.Instance()->SetHardTarget(gp);
+									TargetSystem.Instance()->InteractWithObject(gp);
+								}
+								await Task.Delay(200);
+							} else {
+								var clicked = false;
+								unsafe {
+									var atk = (AtkUnitBase*)ptr.Address;
+									var AtkUldManager = atk->UldManager;
+									for (var i = 0; i < AtkUldManager.NodeListCount; i++) {
+										var gri = AtkUldManager.NodeList[i];
+										if ((ushort)gri->Type == 1010) {
+											var cb = gri->GetAsAtkComponentCheckBox();
+											var GriUldManager = cb->UldManager;
+											for (var j = 0; j < GriUldManager.NodeListCount; j++) {
+												var grj = GriUldManager.NodeList[j];
+												if (grj->Type == NodeType.Res) {
+													for (var k = 0; k < grj->ChildCount; k++) {
+														var grk = grj->ChildNode[k];
+														if ((ushort)grk.Type == 1005 && grk.IsVisible()) {
+															Click(cb, atk);
+															clicked = true;
+															break;
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+								if (clicked) await Task.Delay(400);
+							}
+						}
+						IsAutoGathering = false;
+					});
+				}
+				if (IsAutoGathering && ImGui.Button("停止")) {
+					IsAutoGathering = false;
+					Ipcs.Stop();
+				}
+			});
 			ImGui.EndTabBar();
 		}
 	}
+
+	private static unsafe void Click(AtkComponentCheckBox* target, AtkUnitBase* addon) {
+		try {
+			//var btnRes = target.AtkComponentButton.AtkComponentBase.OwnerNode->AtkResNode;
+			var btnRes = target->AtkComponentButton.OwnerNode->AtkResNode;
+			var evt = btnRes.AtkEventManager.Event;
+			var data = stackalloc AtkEventData[1];
+			addon->ReceiveEvent(evt->State.EventType, (int)evt->Param, evt, data); // btnRes.AtkEventManager.Event);
+		} catch (Exception e) {
+			Log.Error(e.ToString());
+		}
+	}
+
+	internal static bool IsAutoGathering;
 
 	#region Beans
 
@@ -618,7 +690,7 @@ public class MainWindow() : Window("LatihasExport") {
 			res => res.ItemName,
 			res => res.ItemCount
 		];
-		internal readonly string ItemCount = itemCount;
+		private readonly string ItemCount = itemCount;
 		internal readonly string ItemName = itemName;
 		private readonly string Job = job;
 		private readonly string Lv = lv;

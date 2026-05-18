@@ -47,8 +47,12 @@ public sealed class Plugin : IDalamudPlugin {
 	[PluginService] private static ICommandManager CommandManager { get; set; } = null!;
 	[PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
 	[PluginService] private static IFramework Framework { get; set; } = null!;
+	[PluginService] internal static IObjectTable ObjectTable { get; set; } = null!;
+	[PluginService] internal static IGameGui GameGui { get; set; } = null!;
+	[PluginService] internal static ICondition Condition { get; set; } = null!;
 
 	public void Dispose() {
+		MainWindow.IsAutoGathering = false;
 		WindowSystem.RemoveAllWindows();
 		CommandManager.RemoveHandler("/le");
 		CommandManager.RemoveHandler("/latihasexport");
