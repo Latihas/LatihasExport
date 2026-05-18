@@ -6,18 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Game.Control;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using FFXIVClientStructs.Interop;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -32,7 +27,7 @@ namespace LatihasExport;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "InvertIf")]
-public class MainWindow() : Window("LatihasExport") {
+public partial class MainWindow() : Window("LatihasExport") {
 	private const ImGuiTableFlags ImGuiTableFlag = ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable | ImGuiTableFlags.RowBg;
 	private static BRecipe[] _lRecipe = null!;
 	private static uint[] _lFishCaught = null!, _lsFishCaught = null!;
@@ -48,19 +43,18 @@ public class MainWindow() : Window("LatihasExport") {
 	private static unsafe QuestManager* _questManagerInstance;
 
 	private static readonly Dictionary<string, string[]> tableFilterData = new();
-	private readonly Configuration _configuration = Plugin.Configuration;
 
-	private void MkDir() {
+	private static void MkDir() {
 		try {
-			Directory.CreateDirectory(_configuration.SavePath);
+			Directory.CreateDirectory(Configuration.SavePath);
 		} catch (Exception e) {
 			Log.Error($"创建目录失败: {e.Message}");
 		}
 	}
 
-	private void WriteFile(string fn, string content) {
+	private static void WriteFile(string fn, string content) {
 		MkDir();
-		File.WriteAllText(Path.Combine(_configuration.SavePath, fn), content);
+		File.WriteAllText(Path.Combine(Configuration.SavePath, fn), content);
 	}
 
 	private static IEnumerable<T> Gl<T>(Func<T, bool> predicate) where T : struct, IExcelRow<T> {
@@ -162,7 +156,7 @@ public class MainWindow() : Window("LatihasExport") {
 		if (ImGui.Button($"导出到 {csvName}")) {
 			var sb = new StringBuilder(string.Join(",", header)).Append('\n');
 			foreach (var p in data) sb.Append(p).Append('\n');
-			File.WriteAllText(Path.Combine(Plugin.Configuration.SavePath, csvName), sb.ToString(), Encoding.UTF8);
+			File.WriteAllText(Path.Combine(Configuration.SavePath, csvName), sb.ToString(), Encoding.UTF8);
 			NotificationManager.AddNotification(new Notification {
 				Title = csvName,
 				Content = $"已导出到 {csvName}"
@@ -235,174 +229,19 @@ public class MainWindow() : Window("LatihasExport") {
 	private static bool AchievementOrderByProgress;
 
 	public override void Draw() {
-		if (ImGui.InputText("保存路径", ref _configuration.SavePath, 114514)) _configuration.Save();
+		if (ImGui.InputText("保存路径", ref Configuration.SavePath, 114514)) Configuration.Save();
 		ImGui.SameLine();
 		if (ImGui.Button("打开输出目录")) {
 			MkDir();
-			Start(_configuration.SavePath);
+			Start(Configuration.SavePath);
 		}
 		if (ImGui.Button("刷新")) RefreshData();
 		if (ImGui.BeginTabBar("tab")) {
-			NewTab("制作笔记", () => {
-				if (ImGui.Button("导出到Artisan")) {
-					var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
-					foreach (var p in _lRecipe.Select(acc => BRecipe.GetMaterial(acc.Name)))
-						if (p != 0)
-							sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
-					sb.Append("]}");
-					var s = sb.ToString();
-					ImGui.SetClipboardText(s);
-					NotificationManager.AddNotification(new Notification {
-						Title = "已复制",
-						Content = s
-					});
-				}
-				ImGui.SameLine();
-				if (ImGui.Button("导出前50到Artisan")) {
-					var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
-					var iter = 0;
-					foreach (var p in _lRecipe.Select(acc => BRecipe.GetMaterial(acc.Name)))
-						if (p != 0) {
-							if (iter++ == 49) break;
-							sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
-						}
-					sb.Append("]}");
-					var s = sb.ToString();
-					ImGui.SetClipboardText(s);
-					NotificationManager.AddNotification(new Notification {
-						Title = "已复制前50",
-						Content = s
-					});
-				}
-				ImGui.SameLine();
-				NewTable(BRecipe.Header, _lRecipe, BRecipe.Acts, "制作笔记", BRecipe.Filters, "_lRecipe");
-			});
-			NewTab("钓鱼", () => {
-				if (ImGui.Button("导出到鱼糕")) {
-					var sb = new StringBuilder("{\"completed\":[");
-					foreach (var res in _lFishCaught) sb.Append(res).Append(',');
-					foreach (var res in _lsFishCaught) sb.Append(res).Append(',');
-					sb.Remove(sb.Length - 1, 1).Append("]}");
-					WriteFile("fish.json", sb.ToString());
-					NotificationManager.AddNotification(new Notification {
-						Title = "导完了",
-						Content = "已导出到 fish.json"
-					});
-				}
-				ImGui.SameLine();
-				if (ImGui.Button("打开鱼糕")) Start("https://fish.ffmomola.com/ng/#/wiki/fishing");
-				ImGui.SameLine();
-				ToCsv(BUncaughtFish.Header, _lFishUnCaught.Concat(_lsFishUnCaught).ToArray(), "钓鱼");
-				NewTable(BUncaughtFish.Header, _lFishUnCaught, BUncaughtFish.Acts, filter: BUncaughtFish.Filters, filterTag: "_lFishUnCaught");
-				NewTable(BUncaughtFish.Header, _lsFishUnCaught, BUncaughtFish.Acts, filter: BUncaughtFish.Filters, filterTag: "_lsFishUnCaught");
-			});
-			NewTab("成就", () => {
-				if (_lAchievement != null) {
-					if (ImGui.Checkbox("按照进度排序(勾选刷新，非实时更新)", ref AchievementOrderByProgress)) RefreshData();
-					if (ImGui.Button("一键获取空数据(可能会卡死)"))
-						foreach (var res in _lAchievement) {
-							if (AchievementServiceInstance.Current.ContainsKey(res._rowId)) continue;
-							AchievementServiceInstance.UpdateProgress(res._rowId);
-						}
-					ImGui.SameLine();
-					if (ImGui.Button("重置队列(可清除卡死)")) AchievementServiceInstance.Reset();
-					ImGui.SameLine();
-					if (ImGui.Button("重置获取到的数据")) {
-						AchievementServiceInstance.Reset();
-						AchievementServiceInstance.Current.Clear();
-						AchievementServiceInstance.Max.Clear();
-					}
-					ImGui.SameLine();
-					NewTable(BAchievement.Header, _lAchievement, BAchievement.Acts, "成就", BAchievement.Filters, "_lAchievement");
-				} else ImGui.Text("打开一次成就界面以刷新");
-			});
-			NewTab("幻卡", () => {
-				if (ImGui.Button("导出到arrtripletriad.com")) {
-					var sb = new StringBuilder("[false,");
-					unsafe {
-						var bitArray = UIState.Instance()->UnlockedTripleTriadCardsBitArray;
-						for (var l = 1; l < bitArray.ByteLength; l++) sb.Append(bitArray[l - 1].ToString().ToLower()).Append(',');
-					}
-					sb.Remove(sb.Length - 1, 1).Append(']');
-					WriteFile("ttc.json", sb.ToString());
-					NotificationManager.AddNotification(new Notification {
-						Title = "导完了",
-						Content = "已导出到 ttc.json"
-					});
-				}
-				ImGui.SameLine();
-				if (ImGui.Button("打开arrtripletriad.com")) Start("https://arrtripletriad.com/cn/huan-ka-yi-lan");
-				ImGui.SameLine();
-				NewTable(BT2.Header, _lTripleTriadCard, BT2.Acts, "幻卡", BT2.Filters, "_lTripleTriadCard");
-			});
-			NewTab("理符", () => {
-				if (ImGui.Button("导出已接受的可制作物品到Artisan")) {
-					var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
-					foreach (var p in _lLeveAccepted.Select(acc => BRecipe.GetMaterial(acc.ItemName)))
-						if (p != 0)
-							sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
-					sb.Append("]}");
-					var s = sb.ToString();
-					ImGui.SetClipboardText(s);
-					NotificationManager.AddNotification(new Notification {
-						Title = "已复制",
-						Content = s
-					});
-				}
-				ImGui.SameLine();
-				if (ImGui.Button("导出所有的可制作物品到Artisan")) {
-					var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
-					foreach (var acc in _lLeve) {
-						var p = BRecipe.GetMaterial(acc.ItemName);
-						if (p != 0) sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
-					}
-					sb.Append("]}");
-					var s = sb.ToString();
-					ImGui.SetClipboardText(s);
-					NotificationManager.AddNotification(new Notification {
-						Title = "已复制",
-						Content = s
-					});
-				}
-				ImGui.SameLine();
-				if (ImGui.Button("导出所有的可制作物品前50到Artisan")) {
-					var sb = new StringBuilder("{\"Name\":\"New\",\"Recipes\":[");
-					var iter = 0;
-					foreach (var acc in _lLeve) {
-						var p = BRecipe.GetMaterial(acc.ItemName);
-						if (p != 0) {
-							if (iter++ == 49) break;
-							sb.Append($"{{\"ID\":{p},\"Quantity\":1,\"ListItemOptions\":{{\"NQOnly\":false,\"Skipping\":false}}}},");
-						}
-					}
-					sb.Append("]}");
-					var s = sb.ToString();
-					ImGui.SetClipboardText(s);
-					NotificationManager.AddNotification(new Notification {
-						Title = "已复制前50",
-						Content = s
-					});
-				}
-				ImGui.SameLine();
-				if (ImGui.Button("导出所有的不可制作物品")) {
-					var sb = new StringBuilder();
-					foreach (var p in _lLeve.Select(acc => BRecipe.GetNonMaterial(acc.ItemName)))
-						if (p is not null)
-							sb.Append($"{p},");
-					var s = sb.ToString();
-					ImGui.SetClipboardText(s);
-					NotificationManager.AddNotification(new Notification {
-						Title = "已复制",
-						Content = s
-					});
-				}
-				ImGui.SameLine();
-				ToCsv(BLeve.Header, _lLeve, "理符");
-				ImGui.Text("已接受理符");
-				NewTable(BLeve.Header, _lLeveAccepted, BLeve.Acts, filter: BLeve.Filters, filterTag: "_lLeveAccepted");
-				ImGui.Text("所有理符");
-				NewTable(BLeve.Header, _lLeve, BLeve.Acts, filter: BLeve.Filters, filterTag: "_lLeve");
-			});
+			NewTab("制作笔记", DrawRecipe);
+			NewTab("钓鱼", DrawFish);
+			NewTab("成就", DrawAchievement);
+			NewTab("幻卡", DrawTTC);
+			NewTab("理符", DrawLeve);
 			NewTab("任务", () => NewTable(BQuest.Header, _lQuest, BQuest.Acts, "任务", BQuest.Filters, "_lQuest"));
 			NewTab("乐谱", () => NewTable(BT2.Header, _lOrchestrion, BT2.Acts, "乐谱", BT2.Filters, "_lOrchestrion"));
 			NewTab("坐骑", () => NewTable(BT3.Header, _lMount, BT3.Acts, "坐骑", BT3.Filters, "_lMount"));
@@ -412,76 +251,6 @@ public class MainWindow() : Window("LatihasExport") {
 			NewTab("教程", () => NewTable(BHowTo.Header, _lHowto, BHowTo.Acts, "教程", BHowTo.Filters, "_lHowto"));
 			NewTab("宠物", () => NewTable(BT3.Header, _lCompanion, BT3.Acts, "宠物", BT3.Filters, "_lCompanion"));
 			NewTab("副本", () => NewTable(BHowTo.Header, lInstanceContent, BHowTo.Acts, "副本", BHowTo.Filters, "_lInstanceContent"));
-			NewTab("半自动采集理符", () => {
-				ImGui.Text("先接取并到达目的地附近开启理符任务，然后点击开始即可。");
-				if (!IsAutoGathering && ImGui.Button("开始")) {
-					IsAutoGathering = true;
-					Task.Run(async () => {
-						while (IsAutoGathering) {
-							var ptr = GameGui.GetAddonByName("Gathering");
-							if (ptr == null || ptr == IntPtr.Zero || !ptr.IsVisible) {
-								var pp = ObjectTable.LocalPlayer!.Position;
-								Pointer<GameObject> gp;
-								unsafe {
-									var gl = GameObjectManager.Instance()->Objects.IndexSorted.ToArray().Where(obj => {
-										try {
-											var o = obj.Value;
-											return o->ObjectKind == ObjectKind.GatheringPoint
-											       && o->NamePlateIconId == 71244
-											       && o->TargetableStatus.HasFlag(ObjectTargetableFlags.IsTargetable);
-										} catch (Exception) {
-											return false;
-										}
-									}).OrderBy(obj => Vector3.DistanceSquared(obj.Value->Position, pp)).FirstOrDefault();
-									if (gl == null) break;
-									gp = gl.Value;
-									Ipcs.PathfindAndMoveTo(gl.Value->Position, Plugin.Condition[ConditionFlag.Mounted]);
-								}
-								await Task.Delay(3000);
-								Ipcs.Stop();
-								await Task.Delay(200);
-								unsafe {
-									TargetSystem.Instance()->SetHardTarget(gp);
-									TargetSystem.Instance()->InteractWithObject(gp);
-								}
-								await Task.Delay(200);
-							} else {
-								var clicked = false;
-								unsafe {
-									var atk = (AtkUnitBase*)ptr.Address;
-									var AtkUldManager = atk->UldManager;
-									for (var i = 0; i < AtkUldManager.NodeListCount; i++) {
-										var gri = AtkUldManager.NodeList[i];
-										if ((ushort)gri->Type == 1010) {
-											var cb = gri->GetAsAtkComponentCheckBox();
-											var GriUldManager = cb->UldManager;
-											for (var j = 0; j < GriUldManager.NodeListCount; j++) {
-												var grj = GriUldManager.NodeList[j];
-												if (grj->Type == NodeType.Res) {
-													for (var k = 0; k < grj->ChildCount; k++) {
-														var grk = grj->ChildNode[k];
-														if ((ushort)grk.Type == 1005 && grk.IsVisible()) {
-															Click(cb, atk);
-															clicked = true;
-															break;
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-								if (clicked) await Task.Delay(400);
-							}
-						}
-						IsAutoGathering = false;
-					});
-				}
-				if (IsAutoGathering && ImGui.Button("停止")) {
-					IsAutoGathering = false;
-					Ipcs.Stop();
-				}
-			});
 			ImGui.EndTabBar();
 		}
 	}
@@ -498,7 +267,6 @@ public class MainWindow() : Window("LatihasExport") {
 		}
 	}
 
-	internal static bool IsAutoGathering;
 
 	#region Beans
 
@@ -706,7 +474,10 @@ public class MainWindow() : Window("LatihasExport") {
 
 		internal static unsafe BLeve[] GetAcceptedData() {
 			var x = Gl<Leve>(i => i.AllowanceCost != 0 && i is { RowId: > 0, GilReward: > 0 }).ToArray();
-			return GetData(_questManagerInstance->LeveQuests.ToArray().Where(i => i.LeveId != 0).Select(i => x.FirstOrDefault(j => j.RowId == i.LeveId)).ToArray());
+			return GetData(_questManagerInstance->LeveQuests.ToArray()
+				.Where(i => i.LeveId != 0)
+				.Where(j=> x.Any(r => j.LeveId == r.RowId))
+				.Select(i => x.First(j => j.RowId == i.LeveId)).ToArray());
 		}
 
 		private static BLeve[] GetData(Leve[] lLevex) {

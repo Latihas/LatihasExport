@@ -19,7 +19,7 @@ public sealed class Plugin : IDalamudPlugin {
 	public readonly WindowSystem WindowSystem = new("LatihasExport");
 
 	public Plugin() {
-		Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+		Configuration = PluginInterface.GetPluginConfig() as MConfiguration ?? new MConfiguration();
 		_mainWindow = new MainWindow();
 		WindowSystem.AddWindow(_mainWindow);
 		var p = new CommandInfo(OnCommand) {
@@ -37,7 +37,7 @@ public sealed class Plugin : IDalamudPlugin {
 		Framework.Update += _ => AchievementServiceInstance.ProcNext();
 	}
 
-	internal static Configuration Configuration { get; private set; } = null!;
+	internal static MConfiguration Configuration { get; private set; } = null!;
 
 	[PluginService] public static INotificationManager NotificationManager { get; private set; } = null!;
 	[PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
@@ -53,6 +53,7 @@ public sealed class Plugin : IDalamudPlugin {
 
 	public void Dispose() {
 		MainWindow.IsAutoGathering = false;
+		MainWindow.IsAutoFighting = false;
 		WindowSystem.RemoveAllWindows();
 		CommandManager.RemoveHandler("/le");
 		CommandManager.RemoveHandler("/latihasexport");

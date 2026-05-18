@@ -4,7 +4,7 @@ using Dalamud.Configuration;
 namespace LatihasExport;
 
 [Serializable]
-public class Configuration : IPluginConfiguration {
+public class MConfiguration : IPluginConfiguration {
 	public string SavePath = "";
 
 	public int Version { get; set; }
