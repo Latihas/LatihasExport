@@ -115,9 +115,7 @@ public partial class MainWindow {
 						gp = gl.Value;
 						Ipcs.PathfindAndMoveTo(gl.Value->Position, Condition[ConditionFlag.Mounted]);
 					}
-					await Task.Delay(3000);
-					Ipcs.Stop();
-					await Task.Delay(200);
+					while (Ipcs.IsRunning()) await Task.Delay(1000);
 					unsafe {
 						TargetSystem.Instance()->SetHardTarget(gp);
 					}
@@ -128,30 +126,31 @@ public partial class MainWindow {
 					await Task.Delay(200);
 				} else {
 					var clicked = false;
-					unsafe {
-						var atk = (AtkUnitBase*)ptr.Address;
-						var AtkUldManager = atk->UldManager;
-						for (var i = 0; i < AtkUldManager.NodeListCount; i++) {
-							var gri = AtkUldManager.NodeList[i];
-							if ((ushort)gri->Type == 1010) {
-								var cb = gri->GetAsAtkComponentCheckBox();
-								var GriUldManager = cb->UldManager;
-								for (var j = 0; j < GriUldManager.NodeListCount; j++) {
-									var grj = GriUldManager.NodeList[j];
-									if (grj->Type == NodeType.Res) {
-										for (var k = 0; k < grj->ChildCount; k++) {
-											var grk = grj->ChildNode[k];
-											if ((ushort)grk.Type == 1005 && grk.IsVisible()) {
-												Click(cb, atk);
-												clicked = true;
-												break;
+					await Framework.RunOnTick(() => {
+						unsafe {
+							var atk = (AtkUnitBase*)ptr.Address;
+							var AtkUldManager = atk->UldManager;
+							for (var i = 0; i < AtkUldManager.NodeListCount && !clicked; i++) {
+								var gri = AtkUldManager.NodeList[i];
+								if ((ushort)gri->Type == 1010) {
+									var cb = gri->GetAsAtkComponentCheckBox();
+									var GriUldManager = cb->UldManager;
+									for (var j = 0; j < GriUldManager.NodeListCount && !clicked; j++) {
+										var grj = GriUldManager.NodeList[j];
+										if (grj->Type == NodeType.Res) {
+											for (var k = 0; k < grj->ChildCount && !clicked; k++) {
+												var grk = grj->ChildNode[k];
+												if ((ushort)grk.Type == 1005 && grk.IsVisible()) {
+													Click(cb, atk);
+													clicked = true;
+												}
 											}
 										}
 									}
 								}
 							}
 						}
-					}
+					});
 					if (clicked) await Task.Delay(400);
 				}
 			}

@@ -9,7 +9,7 @@ namespace LatihasExport;
 internal static class Ipcs {
 	private const string Name = "vnavmesh";
 	private static bool _hasLoggedInitSuccess, _hasLoggedPluginNotFound;
-	private static ICallGateSubscriber<bool>? _navIsReady;
+	private static ICallGateSubscriber<bool>? _navIsReady, _pathIsRunning;
 	private static ICallGateSubscriber<object>? _pathStop;
 	private static ICallGateSubscriber<Vector3, bool, bool>? _pathfindAndMoveTo;
 
@@ -28,9 +28,8 @@ internal static class Ipcs {
 				var pi = PluginInterface;
 				_navIsReady = pi.GetIpcSubscriber<bool>($"{Name}.Nav.IsReady");
 				_pathStop = pi.GetIpcSubscriber<object>($"{Name}.Path.Stop");
-				pi.GetIpcSubscriber<bool>($"{Name}.Path.IsRunning");
+				_pathIsRunning = pi.GetIpcSubscriber<bool>($"{Name}.Path.IsRunning");
 				_pathfindAndMoveTo = pi.GetIpcSubscriber<Vector3, bool, bool>($"{Name}.SimpleMove.PathfindAndMoveTo");
-				pi.GetIpcSubscriber<Vector3>($"{Name}.Query.Mesh.FlagToPoint");
 				if (_hasLoggedInitSuccess) return;
 				Log.Information("NavmeshIPC初始化成功");
 				_hasLoggedInitSuccess = true;
@@ -42,6 +41,12 @@ internal static class Ipcs {
 			Log.Warning($"未找到 {Name} 插件，导航功能不可用");
 			_hasLoggedPluginNotFound = true;
 		}
+	}
+
+	internal static bool IsRunning() {
+		if (!IsReady()) Init();
+		var result = Execute(() => _pathIsRunning?.InvokeFunc());
+		return result.HasValue && result.Value;
 	}
 
 	private static T? Execute<T>(Func<T> func) {

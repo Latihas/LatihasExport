@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
     <OutputPath>bin</OutputPath>
-    <Version>7.51.2.0</Version>
+    <Version>7.51.2.1</Version>
     <RepoUrl>https://github.com/Latihas/LatihasExport</RepoUrl>
     <Author>Latihas</Author>
     <Name>LatihasExport</Name>

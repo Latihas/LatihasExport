@@ -56,7 +56,7 @@ public sealed class Plugin : IDalamudPlugin {
 	[PluginService] internal static IPluginLog Log { get; private set; } = null!;
 	[PluginService] private static ICommandManager CommandManager { get; set; } = null!;
 	[PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
-	[PluginService] private static IFramework Framework { get; set; } = null!;
+	[PluginService] internal static IFramework Framework { get; set; } = null!;
 	[PluginService] internal static IObjectTable ObjectTable { get; set; } = null!;
 	[PluginService] internal static IGameGui GameGui { get; set; } = null!;
 	[PluginService] internal static ICondition Condition { get; set; } = null!;
