@@ -92,77 +92,81 @@ public partial class MainWindow {
 	internal static bool IsAutoGathering;
 	internal static bool IsAutoFighting;
 
-	private static void AutoGetherLeve() {
-		if (!IsAutoGathering && ImGui.Button("开始半自动采集理符")) {
-			IsAutoGathering = true;
-			Task.Run(async () => {
-				while (IsAutoGathering) {
-					var ptr = GameGui.GetAddonByName("Gathering");
-					if (ptr == null || ptr == IntPtr.Zero || !ptr.IsVisible) {
-						var pp = ObjectTable.LocalPlayer!.Position;
-						Pointer<GameObject> gp;
-						unsafe {
-							var gl = GameObjectManager.Instance()->Objects.IndexSorted.ToArray().Where(obj => {
-								try {
-									var o = obj.Value;
-									return o->ObjectKind == ObjectKind.GatheringPoint
-									       && o->NamePlateIconId == 71244
-									       && o->TargetableStatus.HasFlag(ObjectTargetableFlags.IsTargetable);
-								} catch (Exception) {
-									return false;
-								}
-							}).OrderBy(obj => Vector3.DistanceSquared(obj.Value->Position, pp)).FirstOrDefault();
-							if (gl == null) break;
-							gp = gl.Value;
-							Ipcs.PathfindAndMoveTo(gl.Value->Position, Condition[ConditionFlag.Mounted]);
-						}
-						await Task.Delay(3000);
-						Ipcs.Stop();
-						await Task.Delay(200);
-						unsafe {
-							TargetSystem.Instance()->SetHardTarget(gp);
-						}
-						await Task.Delay(200);
-						unsafe {
-							TargetSystem.Instance()->InteractWithObject(gp);
-						}
-						await Task.Delay(200);
-					} else {
-						var clicked = false;
-						unsafe {
-							var atk = (AtkUnitBase*)ptr.Address;
-							var AtkUldManager = atk->UldManager;
-							for (var i = 0; i < AtkUldManager.NodeListCount; i++) {
-								var gri = AtkUldManager.NodeList[i];
-								if ((ushort)gri->Type == 1010) {
-									var cb = gri->GetAsAtkComponentCheckBox();
-									var GriUldManager = cb->UldManager;
-									for (var j = 0; j < GriUldManager.NodeListCount; j++) {
-										var grj = GriUldManager.NodeList[j];
-										if (grj->Type == NodeType.Res) {
-											for (var k = 0; k < grj->ChildCount; k++) {
-												var grk = grj->ChildNode[k];
-												if ((ushort)grk.Type == 1005 && grk.IsVisible()) {
-													Click(cb, atk);
-													clicked = true;
-													break;
-												}
+	internal static void StartAutoGatherLeve() {
+		IsAutoGathering = true;
+		Task.Run(async () => {
+			while (IsAutoGathering) {
+				var ptr = GameGui.GetAddonByName("Gathering");
+				if (ptr == null || ptr == IntPtr.Zero || !ptr.IsVisible) {
+					var pp = ObjectTable.LocalPlayer!.Position;
+					Pointer<GameObject> gp;
+					unsafe {
+						var gl = GameObjectManager.Instance()->Objects.IndexSorted.ToArray().Where(obj => {
+							try {
+								var o = obj.Value;
+								return o->ObjectKind == ObjectKind.GatheringPoint
+								       && o->NamePlateIconId == 71244
+								       && o->TargetableStatus.HasFlag(ObjectTargetableFlags.IsTargetable);
+							} catch (Exception) {
+								return false;
+							}
+						}).OrderBy(obj => Vector3.DistanceSquared(obj.Value->Position, pp)).FirstOrDefault();
+						if (gl == null) break;
+						gp = gl.Value;
+						Ipcs.PathfindAndMoveTo(gl.Value->Position, Condition[ConditionFlag.Mounted]);
+					}
+					await Task.Delay(3000);
+					Ipcs.Stop();
+					await Task.Delay(200);
+					unsafe {
+						TargetSystem.Instance()->SetHardTarget(gp);
+					}
+					await Task.Delay(200);
+					unsafe {
+						TargetSystem.Instance()->InteractWithObject(gp);
+					}
+					await Task.Delay(200);
+				} else {
+					var clicked = false;
+					unsafe {
+						var atk = (AtkUnitBase*)ptr.Address;
+						var AtkUldManager = atk->UldManager;
+						for (var i = 0; i < AtkUldManager.NodeListCount; i++) {
+							var gri = AtkUldManager.NodeList[i];
+							if ((ushort)gri->Type == 1010) {
+								var cb = gri->GetAsAtkComponentCheckBox();
+								var GriUldManager = cb->UldManager;
+								for (var j = 0; j < GriUldManager.NodeListCount; j++) {
+									var grj = GriUldManager.NodeList[j];
+									if (grj->Type == NodeType.Res) {
+										for (var k = 0; k < grj->ChildCount; k++) {
+											var grk = grj->ChildNode[k];
+											if ((ushort)grk.Type == 1005 && grk.IsVisible()) {
+												Click(cb, atk);
+												clicked = true;
+												break;
 											}
 										}
 									}
 								}
 							}
 						}
-						if (clicked) await Task.Delay(400);
 					}
+					if (clicked) await Task.Delay(400);
 				}
-				IsAutoGathering = false;
-			});
-		}
-		if (IsAutoGathering && ImGui.Button("停止半自动采集理符")) {
+			}
 			IsAutoGathering = false;
-			Ipcs.Stop();
-		}
+		});
+	}
+
+	internal static void StopAutoGatherLeve() {
+		IsAutoGathering = false;
+		Ipcs.Stop();
+	}
+
+	private static void AutoGetherLeve() {
+		if (!IsAutoGathering && ImGui.Button("开始半自动采集理符")) StartAutoGatherLeve();
+		if (IsAutoGathering && ImGui.Button("停止半自动采集理符")) StopAutoGatherLeve();
 	}
 
 	private static void AutoFightLeve() {

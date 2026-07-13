@@ -27,6 +27,16 @@ public sealed class Plugin : IDalamudPlugin {
 		};
 		CommandManager.AddHandler("/le", p);
 		CommandManager.AddHandler("/latihasexport", p);
+		CommandManager.AddHandler("/startagl", new CommandInfo((_, _) => {
+			if (!MainWindow.IsAutoGathering) MainWindow.StartAutoGatherLeve();
+		}) {
+			HelpMessage = "开始半自动采集理符"
+		});
+		CommandManager.AddHandler("/stopagl", new CommandInfo((_, _) => {
+			MainWindow.StopAutoGatherLeve();
+		}) {
+			HelpMessage = "停止半自动采集理符"
+		});
 		PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
 		PluginInterface.UiBuilder.OpenMainUi += OnCommand;
 		if (Configuration.SavePath == "") {
@@ -57,6 +67,8 @@ public sealed class Plugin : IDalamudPlugin {
 		WindowSystem.RemoveAllWindows();
 		CommandManager.RemoveHandler("/le");
 		CommandManager.RemoveHandler("/latihasexport");
+		CommandManager.RemoveHandler("/startagl");
+		CommandManager.RemoveHandler("/stopagl");
 		AchievementServiceInstance.Dispose();
 	}
 
